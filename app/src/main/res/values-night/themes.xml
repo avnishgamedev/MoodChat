@@ -1,0 +1,31 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Base application theme. -->
+    <style name="Base.Theme.MoodChat" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Customize your dark theme here. -->
+        <!-- <item name="colorPrimary">@color/my_dark_primary</item> -->
+    </style>
+
+    <!-- Google Sign-in Button Style - Dark -->
+    <style name="GoogleButton" parent="Widget.Material3.Button.OutlinedButton">
+        <item name="android:textColor">#E3E3E3</item>
+        <item name="backgroundTint">#131314</item>
+        <item name="strokeColor">#8E918F</item>
+        <item name="strokeWidth">1dp</item>
+        <item name="cornerRadius">48dp</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:fontFamily">@font/roboto_medium</item>
+        <item name="iconTint">@null</item>
+    </style>
+
+    <!-- Email Sign-in Button Style - Dark -->
+    <style name="PrimaryButton" parent="Widget.Material3.Button.OutlinedButton">
+        <item name="android:textColor">@color/design_default_color_on_primary</item>
+        <item name="backgroundTint">@color/design_default_color_primary</item>
+        <item name="strokeColor">@color/design_default_color_primary_variant</item>
+        <item name="strokeWidth">1dp</item>
+        <item name="cornerRadius">4dp</item>
+        <item name="android:textSize">14sp</item>
+        <item name="iconTint">@color/design_default_color_on_primary</item>
+    </style>
+
+</resources>
