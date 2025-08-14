@@ -29,10 +29,4 @@
         android:text="Mood Chat"
         android:textSize="48sp" />
 
-    <Button
-        android:id="@+id/btnSignOut"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Sign Out" />
-
 </LinearLayout>

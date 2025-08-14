@@ -43,7 +43,6 @@ public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
 
     // Views
-    Button btnSignOut;
 
     // Meta data
     FirebaseAuth auth;
@@ -98,6 +97,9 @@ public class MainActivity extends AppCompatActivity {
         if (item.getItemId() == R.id.action_profile) {
             startActivity(new Intent(MainActivity.this, ProfileActivity.class));
             return true;
+        } else if (item.getItemId() == R.id.action_logout) {
+            signOut();
+            return true;
         }
         return super.onOptionsItemSelected(item);
     }
@@ -107,8 +109,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setupViews() {
-        btnSignOut = findViewById(R.id.btnSignOut);
-        btnSignOut.setOnClickListener(v -> signOut());
     }
 
     private void signOut() {
