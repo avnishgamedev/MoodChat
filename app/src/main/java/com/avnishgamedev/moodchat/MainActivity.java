@@ -5,10 +5,14 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.CancellationSignal;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.widget.Button;
 
 import androidx.activity.EdgeToEdge;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.view.ActionMode;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -38,7 +42,12 @@ public class MainActivity extends AppCompatActivity {
             return insets;
         });
 
+        setupToolbar();
         setupViews();
+    }
+
+    private void setupToolbar() {
+        setSupportActionBar(findViewById(R.id.materialToolbar));
     }
 
     @Override
@@ -88,5 +97,20 @@ public class MainActivity extends AppCompatActivity {
             startActivity(new Intent(MainActivity.this, LoginActivity.class));
             finish();
         }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        if (item.getItemId() == R.id.action_profile) {
+            startActivity(new Intent(MainActivity.this, ProfileActivity.class));
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 }
