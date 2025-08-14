@@ -9,7 +9,7 @@ android {
 
     defaultConfig {
         applicationId = "com.avnishgamedev.moodchat"
-        minSdk = 24
+        minSdk = 26
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
@@ -47,7 +47,6 @@ dependencies {
     implementation("com.google.firebase:firebase-analytics")
     implementation("com.google.firebase:firebase-auth")
     implementation("com.google.firebase:firebase-firestore")
-    implementation("com.google.firebase:firebase-storage")
 
     // Google SignIn
     implementation("androidx.credentials:credentials:1.3.0")
