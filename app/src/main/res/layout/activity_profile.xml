@@ -20,14 +20,27 @@
                 app:title="Profile" />
         </com.google.android.material.appbar.AppBarLayout>
 
-        <ImageView
-            android:id="@+id/ivProfilePic"
-            android:layout_width="128dp"
-            android:layout_height="128dp"
+        <FrameLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:layout_marginTop="20dp"
-            android:clickable="true"
-            android:src="@drawable/ic_person" />
+            android:layout_marginTop="20dp">
+
+            <ImageView
+                android:id="@+id/ivProfilePic"
+                android:layout_width="128dp"
+                android:layout_height="128dp"
+                android:clickable="true"
+                android:src="@drawable/ic_person" />
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/ic_edit"
+                app:tint="#FFFFFF"
+                android:layout_gravity="bottom|end"/>
+
+        </FrameLayout>
 
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
