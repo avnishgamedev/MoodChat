@@ -5,6 +5,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.media.ThumbnailUtils;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -61,8 +62,7 @@ public class ProfileActivity extends AppCompatActivity {
     // Meta data
     FirebaseAuth auth;
     FirebaseFirestore db;
-    boolean isProfileUpdated = false;
-    Uri newProfilePicUri;
+    Bitmap updatedProfilePic;
     private final ActivityResultLauncher<PickVisualMediaRequest> pickMedia =
             registerForActivityResult(new ActivityResultContracts.PickVisualMedia(), uri -> {
                 if (uri != null) {
@@ -140,9 +140,12 @@ public class ProfileActivity extends AppCompatActivity {
                         etName.setText(name);
                         etUsername.setText(username);
                         etEmail.setText(email);
-                        Drawable profilePic = convertBase64ToDrawable(doc.getString("profile_picture"), this);
-                        if (profilePic != null) {
-                            ivProfilePic.setImageDrawable(profilePic);
+                        String profilePicBase64 = doc.getString("profile_picture");
+                        if (profilePicBase64 != null) {
+                            Bitmap profilePicBitmap = base64ToBitmap(profilePicBase64);
+                            if (profilePicBitmap != null) {
+                                ivProfilePic.setImageBitmap(profilePicBitmap);
+                            }
                         }
                     } else {
                         Snackbar.make(findViewById(android.R.id.content), "User not found", Snackbar.LENGTH_SHORT).show();
@@ -160,11 +163,10 @@ public class ProfileActivity extends AppCompatActivity {
                 .build());
     }
     private void handleSelectedImage(Uri uri) {
-        if (isValidProfileImage(uri, this)) {
-            isProfileUpdated = true;
-            newProfilePicUri = uri;
-            ivProfilePic.setImageURI(uri);
-        } else {
+        try {
+            updatedProfilePic = getCenterSquareBitmapFromUri(this, uri);
+            ivProfilePic.setImageBitmap(updatedProfilePic);
+        } catch (IOException e) {
             Snackbar.make(findViewById(android.R.id.content), "Image not compatible!", Snackbar.LENGTH_SHORT).show();
         }
     }
@@ -183,15 +185,15 @@ public class ProfileActivity extends AppCompatActivity {
         HashMap<String, Object> updates = new HashMap<>();
         updates.put("name", name);
 
-        if (isProfileUpdated) {
-            String base64Image = getBase64ImageFromUri(newProfilePicUri);
+        if (updatedProfilePic != null) {
+            String base64Image = bitmapToBase64(updatedProfilePic, 70);
             updates.put("profile_picture", base64Image);
         }
 
         setLoading(true);
         db.collection("users").document(auth.getCurrentUser().getUid()).set(updates, SetOptions.merge())
                 .addOnSuccessListener(x -> {
-                    isProfileUpdated = false;
+                    updatedProfilePic = null;
                     Snackbar.make(findViewById(android.R.id.content), "Profile updated successfully", Snackbar.LENGTH_SHORT).show();
                 })
                 .addOnFailureListener(e -> {
@@ -201,6 +203,32 @@ public class ProfileActivity extends AppCompatActivity {
     }
 
     // Helpers
+    public Bitmap getCenterSquareBitmapFromUri(Context context, Uri imageUri) throws IOException {
+        // Decode the bitmap from the Uri
+        Bitmap srcBmp = MediaStore.Images.Media.getBitmap(context.getContentResolver(), imageUri);
+
+        int width = srcBmp.getWidth();
+        int height = srcBmp.getHeight();
+
+        // If already square, return original
+        if (width == height) {
+            return srcBmp;
+        }
+
+        // Use ThumbnailUtils for center cropping (handles memory better)
+        int size = Math.min(width, height);
+        return ThumbnailUtils.extractThumbnail(srcBmp, size, size, ThumbnailUtils.OPTIONS_RECYCLE_INPUT);
+    }
+    public static String bitmapToBase64(Bitmap bitmap, int quality) {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.JPEG, quality, baos);
+        byte[] bytes = baos.toByteArray();
+        return Base64.encodeToString(bytes, Base64.NO_WRAP);
+    }
+    public static Bitmap base64ToBitmap(String base64Str) {
+        byte[] decodedBytes = Base64.decode(base64Str, Base64.DEFAULT);
+        return BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.length);
+    }
 
     private void showChangePasswordDialog() {
         // Create the dialog layout
@@ -397,82 +425,6 @@ public class ProfileActivity extends AppCompatActivity {
             }
         }
         return false;
-    }
-
-
-    public static Drawable convertBase64ToDrawable(String base64Image, Context context) {
-        try {
-            if (base64Image == null || base64Image.isEmpty()) {
-                return null;
-            }
-
-            byte[] decodedBytes = Base64.decode(base64Image, Base64.DEFAULT);
-            Bitmap bitmap = BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.length);
-
-            if (bitmap != null) {
-                return new BitmapDrawable(context.getResources(), bitmap);
-            }
-
-        } catch (Exception e) {
-            Log.e("Base64Convert", "Failed to convert Base64 to drawable", e);
-        }
-
-        return null;
-    }
-    private String getBase64ImageFromUri(Uri imageUri) {
-        try {
-            Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), imageUri);
-            Bitmap compressedBitmap = compressImage(bitmap, 200); // 200x200 max
-
-            // Convert to Base64
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            compressedBitmap.compress(Bitmap.CompressFormat.JPEG, 60, baos);
-            String base64Image = Base64.encodeToString(baos.toByteArray(), Base64.DEFAULT);
-            return base64Image;
-        } catch (IOException e) {
-            e.printStackTrace();
-            return "error";
-        }
-    }
-
-    private static Bitmap compressImage(Bitmap bitmap, int maxSize) {
-        if (bitmap.getWidth() > maxSize || bitmap.getHeight() > maxSize) {
-            float ratio = Math.min((float) maxSize / bitmap.getWidth(),
-                    (float) maxSize / bitmap.getHeight());
-            return Bitmap.createScaledBitmap(bitmap,
-                    Math.round(ratio * bitmap.getWidth()),
-                    Math.round(ratio * bitmap.getHeight()), true);
-        }
-        return bitmap;
-    }
-    public static boolean isValidProfileImage(Uri imageUri, Context context) {
-        try {
-            // Check if it's actually an image file
-            String mimeType = context.getContentResolver().getType(imageUri);
-            if (mimeType == null || !mimeType.startsWith("image/")) {
-                return false;
-            }
-
-            // Get image dimensions without loading full image
-            BitmapFactory.Options options = new BitmapFactory.Options();
-            options.inJustDecodeBounds = true;
-
-            InputStream inputStream = context.getContentResolver().openInputStream(imageUri);
-            BitmapFactory.decodeStream(inputStream, null, options);
-            inputStream.close();
-
-            // Check if decoding was successful
-            if (options.outWidth == -1 || options.outHeight == -1) {
-                return false;
-            }
-
-            // Check minimum size (50x50) and maximum size (2000x2000)
-            return options.outWidth >= 50 && options.outHeight >= 50 &&
-                    options.outWidth <= 2000 && options.outHeight <= 2000;
-
-        } catch (Exception e) {
-            return false;
-        }
     }
 
     private void setLoading(boolean status) {

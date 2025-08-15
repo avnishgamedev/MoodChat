@@ -147,7 +147,6 @@ public class LoadMainActivity extends AppCompatActivity {
         return taskCompletionSource.getTask();
     }
 
-
     private void createUserDocument(FirebaseUser user, String username) {
         HashMap<String, Object> data = new HashMap<>();
         data.put("name", user.getDisplayName());
@@ -165,7 +164,7 @@ public class LoadMainActivity extends AppCompatActivity {
     private void loadUserProfileImage(Uri photoUri, HashMap<String, Object> data, FirebaseUser user) {
         loadBitmapFromUri(photoUri)
                 .addOnSuccessListener(bitmap -> {
-                    String base64Image = convertBitmapToBase64(bitmap);
+                    String base64Image = bitmapToBase64(bitmap, 70);
                     data.put("profile_picture", base64Image);
                     saveUserToFirestore(data, user);
                 })
@@ -212,19 +211,10 @@ public class LoadMainActivity extends AppCompatActivity {
 
         return taskCompletionSource.getTask();
     }
-    public static String convertBitmapToBase64(Bitmap bitmap) {
-        if (bitmap == null) {
-            return null;
-        }
-
-        try {
-            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 60, byteArrayOutputStream);
-            byte[] byteArray = byteArrayOutputStream.toByteArray();
-            return Base64.encodeToString(byteArray, Base64.DEFAULT);
-        } catch (Exception e) {
-            Log.e("BitmapToBase64", "Failed to convert bitmap to Base64", e);
-            return null;
-        }
+    public static String bitmapToBase64(Bitmap bitmap, int quality) {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.JPEG, quality, baos);
+        byte[] bytes = baos.toByteArray();
+        return Base64.encodeToString(bytes, Base64.NO_WRAP);
     }
 }
