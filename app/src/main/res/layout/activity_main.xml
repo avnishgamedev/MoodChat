@@ -1,32 +1,37 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MainActivity"
-    android:orientation="vertical">
+    tools:context=".MainActivity">
 
-    <com.google.android.material.appbar.AppBarLayout
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-        <com.google.android.material.appbar.MaterialToolbar
-            android:id="@+id/materialToolbar"
-            style="@style/Widget.Material3.Toolbar.Surface"
-            android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize"
-            app:title="Mood Chat"
-            app:menu="@menu/menu_main" />
-    </com.google.android.material.appbar.AppBarLayout>
+        android:layout_height="match_parent"
+        android:orientation="vertical">
 
-    <TextView
+        <com.google.android.material.appbar.AppBarLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+            <com.google.android.material.appbar.MaterialToolbar
+                android:id="@+id/materialToolbar"
+                style="@style/Widget.Material3.Toolbar.Surface"
+                android:layout_width="match_parent"
+                android:layout_height="?attr/actionBarSize"
+                app:title="Mood Chat"
+                app:menu="@menu/menu_main" />
+        </com.google.android.material.appbar.AppBarLayout>
+
+    </LinearLayout>
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fab"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:layout_marginTop="40dp"
-        android:textStyle="bold"
-        android:text="Mood Chat"
-        android:textSize="48sp" />
+        android:layout_gravity="bottom|end"
+        android:src="@drawable/ic_add"
+        android:layout_margin="10dp" />
 
-</LinearLayout>
+</FrameLayout>

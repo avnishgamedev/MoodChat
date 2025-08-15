@@ -160,10 +160,8 @@ public class LoginActivity extends AppCompatActivity {
         task.addOnSuccessListener(result -> {
             Log.d(TAG, "handleAuthResult:success");
             runOnUiThread(() -> {
-                FirebaseUser user = result.getUser();
-                String s = user.getDisplayName() == null ? user.getEmail() : user.getDisplayName();
-                Toast.makeText(this, "Logged in as " + s, Toast.LENGTH_SHORT).show();
-                startActivity(new Intent(LoginActivity.this, MainActivity.class));
+                Toast.makeText(this, "Logged in", Toast.LENGTH_SHORT).show();
+                startActivity(new Intent(LoginActivity.this, LoadMainActivity.class));
                 finish();
             });
         })

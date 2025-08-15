@@ -26,6 +26,7 @@
         <activity android:name=".EmailVerificationActivity" />
         <activity android:name=".ProfileActivity"
             android:parentActivityName=".MainActivity" />
+        <activity android:name=".LoadMainActivity" />
         <meta-data
             android:name="preloaded_fonts"
             android:resource="@array/preloaded_fonts" />

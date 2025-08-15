@@ -26,6 +26,7 @@ import androidx.credentials.exceptions.ClearCredentialException;
 
 import com.google.android.gms.tasks.Task;
 import com.google.android.gms.tasks.TaskCompletionSource;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentSnapshot;
@@ -43,6 +44,7 @@ public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
 
     // Views
+    FloatingActionButton fab;
 
     // Meta data
     FirebaseAuth auth;
@@ -109,6 +111,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setupViews() {
+        fab = findViewById(R.id.fab);
+        // TODO: Show Dialog when fab is clicked, get other person's email, and start a conversation
     }
 
     private void signOut() {
@@ -146,92 +150,11 @@ public class MainActivity extends AppCompatActivity {
         if (user != null) {
             db.collection("users").document(user.getUid()).get()
                     .addOnSuccessListener(doc -> {
-                        if (!doc.exists()) {
-                            createUserDocument(user);
-                            return;
-                        }
-
                         userDoc = doc;
                     })
                     .addOnFailureListener(e -> {
                         Log.e(TAG, "Failed to load user document: " + e.getLocalizedMessage());
                     });
-        }
-    }
-
-    // Helpers
-    private void createUserDocument(FirebaseUser user) {
-        HashMap<String, Object> data = new HashMap<>();
-        data.put("name", user.getDisplayName());
-        data.put("email", user.getEmail());
-
-        Uri firebaseAuthPhotoUri = user.getPhotoUrl();
-
-        if (firebaseAuthPhotoUri != null) {
-            loadUserProfileImage(firebaseAuthPhotoUri, data, user);
-        } else {
-            saveUserToFirestore(data, user);
-        }
-    }
-    private void loadUserProfileImage(Uri photoUri, HashMap<String, Object> data, FirebaseUser user) {
-        loadBitmapFromUri(photoUri)
-                .addOnSuccessListener(bitmap -> {
-                    String base64Image = convertBitmapToBase64(bitmap);
-                    data.put("image", base64Image);
-                    saveUserToFirestore(data, user);
-                })
-                .addOnFailureListener(e -> {
-                    Log.e(TAG, "Failed to load profile image: " + e.getLocalizedMessage());
-                    // Save without image on failure
-                    saveUserToFirestore(data, user);
-                });
-    }
-    private void saveUserToFirestore(HashMap<String, Object> data, FirebaseUser user) {
-        db.collection("users").document(user.getUid()).set(data)
-                .addOnSuccessListener(aVoid -> {
-                    Log.d(TAG, "User document created successfully");
-                    loadUserDocument();
-                })
-                .addOnFailureListener(e -> {
-                    Log.e(TAG, "Failed to save user document: " + e.getLocalizedMessage());
-                });
-    }
-    public static Task<Bitmap> loadBitmapFromUri(Uri uri) {
-        TaskCompletionSource<Bitmap> taskCompletionSource = new TaskCompletionSource<>();
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-
-        executor.submit(() -> {
-            try {
-                URL url = new URL(uri.toString());
-                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-                connection.setDoInput(true);
-                connection.connect();
-
-                InputStream input = connection.getInputStream();
-                Bitmap bitmap = BitmapFactory.decodeStream(input);
-                input.close();
-
-                taskCompletionSource.setResult(bitmap);
-            } catch (Exception e) {
-                taskCompletionSource.setException(e);
-            }
-        });
-
-        return taskCompletionSource.getTask();
-    }
-    public static String convertBitmapToBase64(Bitmap bitmap) {
-        if (bitmap == null) {
-            return null;
-        }
-
-        try {
-            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 60, byteArrayOutputStream);
-            byte[] byteArray = byteArrayOutputStream.toByteArray();
-            return Base64.encodeToString(byteArray, Base64.DEFAULT);
-        } catch (Exception e) {
-            Log.e("BitmapToBase64", "Failed to convert bitmap to Base64", e);
-            return null;
         }
     }
 }
