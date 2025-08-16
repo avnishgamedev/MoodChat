@@ -45,21 +45,27 @@ public class UserManager {
         return instance;
     }
 
-    public void tryLoadUserDocument() {
+    public Task<DocumentSnapshot> tryLoadUserDocument() {
+        TaskCompletionSource<DocumentSnapshot> completionSource = new TaskCompletionSource<>();
         if (user != null) {
             db.collection("users").document(user.getUid()).get()
                     .addOnSuccessListener(doc -> {
-                        if (doc.exists())
+                        if (doc.exists()) {
                             userDoc = doc;
-                        else
+                            completionSource.setResult(doc);
+                        } else {
                             Log.w(TAG, "tryLoadUserDocument: User Document doesn't exist!");
+                        }
                     })
                     .addOnFailureListener(e -> {
                         Log.e(TAG, "Failed to load user document: " + e.getLocalizedMessage());
+                        completionSource.setException(e);
                     });
         } else {
             Log.e(TAG, "tryLoadUserDocument: User is null!");
+            completionSource.setException(new Exception("User is null!"));
         }
+        return completionSource.getTask();
     }
 
     public Task<Void> updateUserDocument(Map<String, Object> updates) {

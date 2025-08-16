@@ -37,7 +37,6 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.UserInfo;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.SetOptions;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -61,7 +60,6 @@ public class ProfileActivity extends AppCompatActivity {
 
     // Meta data
     FirebaseAuth auth;
-    FirebaseFirestore db;
     Bitmap updatedProfilePic;
     private final ActivityResultLauncher<PickVisualMediaRequest> pickMedia =
             registerForActivityResult(new ActivityResultContracts.PickVisualMedia(), uri -> {
@@ -79,7 +77,6 @@ public class ProfileActivity extends AppCompatActivity {
         setContentView(R.layout.activity_profile);
 
         auth = FirebaseAuth.getInstance();
-        db = FirebaseFirestore.getInstance();
 
         Toolbar toolbar = findViewById(R.id.materialToolbar);
         setSupportActionBar(toolbar);
@@ -106,7 +103,7 @@ public class ProfileActivity extends AppCompatActivity {
             promptUsernameAndCheck(etUsername.getText().toString()).addOnSuccessListener(username -> {
                 HashMap<String, Object> data = new HashMap<>();
                 data.put("username", username);
-                db.collection("users").document(auth.getCurrentUser().getUid()).set(data, SetOptions.merge())
+                UserManager.getInstance().updateUserDocument(data)
                         .addOnSuccessListener(x -> {
                             Snackbar.make(findViewById(android.R.id.content), "Username updated successfully", Snackbar.LENGTH_SHORT).show();
                             etUsername.setText(username);
@@ -131,7 +128,7 @@ public class ProfileActivity extends AppCompatActivity {
 
     private void loadInitialData() {
         setLoading(true);
-        db.collection("users").document(auth.getCurrentUser().getUid()).get()
+        UserManager.getInstance().tryLoadUserDocument()
                 .addOnSuccessListener(doc -> {
                     if (doc.exists()) {
                         String name = doc.getString("name");
@@ -191,7 +188,7 @@ public class ProfileActivity extends AppCompatActivity {
         }
 
         setLoading(true);
-        db.collection("users").document(auth.getCurrentUser().getUid()).set(updates, SetOptions.merge())
+        UserManager.getInstance().updateUserDocument(updates)
                 .addOnSuccessListener(x -> {
                     updatedProfilePic = null;
                     Snackbar.make(findViewById(android.R.id.content), "Profile updated successfully", Snackbar.LENGTH_SHORT).show();
@@ -202,7 +199,7 @@ public class ProfileActivity extends AppCompatActivity {
                 .addOnCompleteListener(x -> setLoading(false));
     }
 
-    // Helpers
+    // --------------------- Helpers -------------------------
     public Bitmap getCenterSquareBitmapFromUri(Context context, Uri imageUri) throws IOException {
         // Decode the bitmap from the Uri
         Bitmap srcBmp = MediaStore.Images.Media.getBitmap(context.getContentResolver(), imageUri);
@@ -341,7 +338,7 @@ public class ProfileActivity extends AppCompatActivity {
     }
 
     private Task<Boolean> isUsernameTaken(String username) {
-        return db.collection("users").whereEqualTo("username", username).get().continueWith(task -> {
+        return FirebaseFirestore.getInstance().collection("users").whereEqualTo("username", username).get().continueWith(task -> {
             if (!task.isSuccessful()) {
                 Snackbar.make(findViewById(android.R.id.content), "Failed to check username: " + task.getException().getLocalizedMessage(), Snackbar.LENGTH_SHORT).show();
                 Log.e(TAG, "Failed to check username: " + task.getException().getLocalizedMessage());
