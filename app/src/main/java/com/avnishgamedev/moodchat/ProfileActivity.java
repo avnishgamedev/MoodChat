@@ -124,10 +124,19 @@ public class ProfileActivity extends AppCompatActivity {
 
     private void loadInitialData() {
         User u = UserManager.getInstance().getUser();
+        if (u == null) {
+            setLoading(true);
+            UserManager.getInstance().loadUser().addOnCompleteListener(task -> loadInitialData());
+            return;
+        }
+
+        setLoading(false);
         etName.setText(u.getName());
         etUsername.setText(u.getUsername());
         etEmail.setText(u.getEmail());
-        ivProfilePic.setImageBitmap(base64ToBitmap(u.getProfilePicture()));
+        String base64ProfilePicture = u.getProfilePicture();
+        if (base64ProfilePicture != null)
+            ivProfilePic.setImageBitmap(base64ToBitmap(base64ProfilePicture));
         tvRegisteredOn.setText(new SimpleDateFormat("dd MMMM yyyy 'at' hh:mm a", Locale.getDefault()).format(u.getRegisteredOn().toDate()));
     }
 

@@ -115,7 +115,7 @@ public class RegisterActivity extends AppCompatActivity {
         } else if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
             Snackbar.make(findViewById(android.R.id.content), "Please enter a valid email", Snackbar.LENGTH_SHORT).show();
             return;
-        } else if (password.length() < 4) {
+        } else if (password.length() < 6) {
             Snackbar.make(findViewById(android.R.id.content), "Password must be at least 4 characters long", Snackbar.LENGTH_SHORT).show();
             return;
         } else if (!password.equals(confirmPassword)) {

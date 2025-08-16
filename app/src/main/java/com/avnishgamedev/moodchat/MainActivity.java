@@ -1,13 +1,9 @@
 package com.avnishgamedev.moodchat;
 
 import android.content.Intent;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.CancellationSignal;
-import android.util.Base64;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -29,6 +25,7 @@ import com.google.android.gms.tasks.Task;
 import com.google.android.gms.tasks.TaskCompletionSource;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 import com.google.firebase.auth.FirebaseAuth;
@@ -36,12 +33,6 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 
-import java.io.ByteArrayOutputStream;
-import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.util.HashMap;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class MainActivity extends AppCompatActivity {
@@ -53,7 +44,6 @@ public class MainActivity extends AppCompatActivity {
     // Meta data
     FirebaseAuth auth;
     FirebaseFirestore db;
-    DocumentSnapshot userDoc;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -116,9 +106,19 @@ public class MainActivity extends AppCompatActivity {
 
     private void setupViews() {
         fab = findViewById(R.id.fab);
-        fab.setOnClickListener(v -> {
-            promptUsername().addOnSuccessListener(user -> {
-                // TODO: start a conversation
+        fab.setOnClickListener(v -> startConversation());
+    }
+
+    private void startConversation() {
+        promptUsername().addOnSuccessListener(user -> {
+            ConversationHelpers.createConversation(UserManager.getInstance().getUser().getUsername(), user.getString("username")).addOnCompleteListener(task -> {
+                if (task.isSuccessful()) {
+                    // startActivity(new Intent(MainActivity.this, ConversationActivity.class));
+                    Snackbar.make(fab, "Conversation started", Snackbar.LENGTH_SHORT).show();
+                } else {
+                    Log.e(TAG, "Couldn't create conversation: " + task.getException().getMessage());
+                    Snackbar.make(fab, "Couldn't create conversation", Snackbar.LENGTH_SHORT).show();
+                }
             });
         });
     }
@@ -191,6 +191,7 @@ public class MainActivity extends AppCompatActivity {
                     if (task.isSuccessful()) {
                         DocumentSnapshot documentSnapshot = task.getResult();
                         taskCompletionSource.setResult(documentSnapshot);
+                        dialog.dismiss();
                     } else {
                         textInputLayout.setError(task.getException().getMessage());
                     }
@@ -206,7 +207,7 @@ public class MainActivity extends AppCompatActivity {
     private Task<DocumentSnapshot> getUserByUsername(String username) {
         TaskCompletionSource<DocumentSnapshot> taskCompletionSource = new TaskCompletionSource<>();
 
-        if (userDoc.getString("username").equals(username)) {
+        if (UserManager.getInstance().getUser().getUsername().equals(username)) {
             taskCompletionSource.setException(new Exception("Cannot start conversation with self!"));
             return taskCompletionSource.getTask();
         }
