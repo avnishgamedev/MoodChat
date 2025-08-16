@@ -4,9 +4,10 @@ import android.util.Log;
 
 import com.google.android.gms.tasks.Task;
 import com.google.android.gms.tasks.TaskCompletionSource;
+import com.google.android.gms.tasks.Tasks;
+import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.SetOptions;
 
@@ -17,23 +18,24 @@ public class UserManager {
 
     private static volatile UserManager instance;
 
-    private final FirebaseAuth auth;
     private final FirebaseFirestore db;
-    private FirebaseUser user;
-
-    private DocumentSnapshot userDoc;
     private boolean pendingUserOnlineStatusUpdate = false;
 
+    private FirebaseUser firebaseUser;
+    private User user;
+
     private UserManager() {
-        auth = FirebaseAuth.getInstance();
         db = FirebaseFirestore.getInstance();
 
-        user = auth.getCurrentUser();
-        auth.addAuthStateListener(auth -> {
-            user = auth.getCurrentUser();
-            Log.d(TAG, "AuthStateChange - Login status: " + (user != null));
+        firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
+        FirebaseAuth.getInstance().addAuthStateListener(auth -> {
+            firebaseUser = auth.getCurrentUser();
+            Log.d(TAG, "AuthStateChange - Login status: " + (firebaseUser != null));
 
-            setUserOnlineStatus(user != null);
+            setUserOnlineStatus(firebaseUser != null);
+            if (firebaseUser == null) {
+                user = null;
+            }
         });
     }
 
@@ -48,20 +50,25 @@ public class UserManager {
         return instance;
     }
 
-    public Task<DocumentSnapshot> tryLoadUserDocument() {
-        TaskCompletionSource<DocumentSnapshot> completionSource = new TaskCompletionSource<>();
-        if (user != null) {
-            db.collection("users").document(user.getUid()).get()
+    public User getUser() {
+        return user;
+    }
+
+    public Task<User> loadUser() {
+        TaskCompletionSource<User> completionSource = new TaskCompletionSource<>();
+        if (firebaseUser != null) {
+            db.collection("users").document(firebaseUser.getUid()).get()
                     .addOnSuccessListener(doc -> {
                         if (doc.exists()) {
-                            userDoc = doc;
-                            completionSource.setResult(doc);
+                            user = doc.toObject(User.class);
+                            completionSource.setResult(user);
 
                             if (pendingUserOnlineStatusUpdate) {
                                 setUserOnlineStatus(true);
                             }
                         } else {
-                            Log.w(TAG, "tryLoadUserDocument: User Document doesn't exist!");
+                            Log.w(TAG, "loadUser: User Document doesn't exist!");
+                            completionSource.setException(new UserDocumentDoesntExistException());
                         }
                     })
                     .addOnFailureListener(e -> {
@@ -69,38 +76,48 @@ public class UserManager {
                         completionSource.setException(e);
                     });
         } else {
-            Log.e(TAG, "tryLoadUserDocument: User is null!");
+            Log.e(TAG, "loadUser: User is null!");
             completionSource.setException(new Exception("User is null!"));
         }
         return completionSource.getTask();
     }
 
-    public Task<Void> updateUserDocument(Map<String, Object> updates) {
-        TaskCompletionSource<Void> completionSource = new TaskCompletionSource<>();
-        if (userDoc != null) {
-            return db.collection("users").document(user.getUid()).set(updates, SetOptions.merge());
-        } else {
-            completionSource.setException(new Exception("User document doesn't exist!"));
-            return completionSource.getTask();
-        }
-    }
-
     public void setUserOnlineStatus(boolean online) {
-        Map<String, Object> updates = Map.of("online", online);
+        Map<String, Object> updates = Map.of("online", online, "lastSeen", Timestamp.now());
         if (user != null) {
-            db.collection("users").document(user.getUid()).set(updates, SetOptions.merge())
+            db.collection("users").document(user.getDocumentId()).set(updates, SetOptions.merge())
                     .addOnFailureListener(e -> {
                         Log.e(TAG, "Failed to update user online status: " + e.getLocalizedMessage());
                     });
             pendingUserOnlineStatusUpdate = false;
-        } else if (userDoc != null) {
-            userDoc.getReference().set(updates)
-                    .addOnFailureListener(e -> {
-                        Log.e(TAG, "Failed to update user online status via userDoc: " + e.getLocalizedMessage());
-                    });
-            pendingUserOnlineStatusUpdate = false;
         } else {
             pendingUserOnlineStatusUpdate = online;
+        }
+    }
+
+    public Task<Void> createOrUpdateUserDocument(User u) {
+        TaskCompletionSource<Void> completionSource = new TaskCompletionSource<>();
+        if (firebaseUser != null) {
+            u.setDocumentId(firebaseUser.getUid());
+            return db.collection("users").document(firebaseUser.getUid()).set(u)
+                    .continueWithTask(task -> {
+                        if (task.isSuccessful()) {
+                            user = u;
+                            return Tasks.forResult(null);
+                        }
+                        return Tasks.forException(task.getException());
+                    });
+        }
+        completionSource.setException(new Exception("User is null!"));
+        return completionSource.getTask();
+    }
+
+    public static class UserDocumentDoesntExistException extends Exception {
+        public UserDocumentDoesntExistException(String message) {
+            super(message);
+        }
+        public UserDocumentDoesntExistException() {
+            super("User Document Doesn't Exist!");
         }
     }
 }

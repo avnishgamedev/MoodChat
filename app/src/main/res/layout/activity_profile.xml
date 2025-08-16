@@ -110,6 +110,22 @@
             android:layout_marginTop="20dp"
             android:text="Change Password" />
 
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginTop="10dp">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Registered on " />
+            <TextView
+                android:id="@+id/tvRegisteredOn"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Date" />
+        </LinearLayout>
+
     </LinearLayout>
 
     <RelativeLayout

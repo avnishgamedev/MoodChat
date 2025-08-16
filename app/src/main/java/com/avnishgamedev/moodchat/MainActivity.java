@@ -89,7 +89,7 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-        UserManager.getInstance().tryLoadUserDocument();
+        UserManager.getInstance().loadUser();
     }
 
     @Override

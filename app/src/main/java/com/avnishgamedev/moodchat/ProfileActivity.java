@@ -41,9 +41,12 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.text.SimpleDateFormat;
 import java.util.HashMap;
+import java.util.Locale;
 
 import android.util.Base64;
+import android.widget.TextView;
 import android.widget.Toast;
 
 public class ProfileActivity extends AppCompatActivity {
@@ -56,6 +59,7 @@ public class ProfileActivity extends AppCompatActivity {
     EditText etEmail;
     Button btnUpdate;
     Button btnChangePassword;
+    TextView tvRegisteredOn;
     RelativeLayout rlLoading;
 
     // Meta data
@@ -93,6 +97,7 @@ public class ProfileActivity extends AppCompatActivity {
         etEmail = findViewById(R.id.etEmail);
         btnUpdate = findViewById(R.id.btnUpdate);
         btnChangePassword = findViewById(R.id.btnChangePassword);
+        tvRegisteredOn = findViewById(R.id.tvRegisteredOn);
         rlLoading = findViewById(R.id.rlLoading);
 
         ivProfilePic.setOnClickListener(v -> showImagePicker());
@@ -101,16 +106,7 @@ public class ProfileActivity extends AppCompatActivity {
 
         etUsername.setOnClickListener(v -> {
             promptUsernameAndCheck(etUsername.getText().toString()).addOnSuccessListener(username -> {
-                HashMap<String, Object> data = new HashMap<>();
-                data.put("username", username);
-                UserManager.getInstance().updateUserDocument(data)
-                        .addOnSuccessListener(x -> {
-                            Snackbar.make(findViewById(android.R.id.content), "Username updated successfully", Snackbar.LENGTH_SHORT).show();
-                            etUsername.setText(username);
-                        })
-                        .addOnFailureListener(e -> {
-                            Snackbar.make(findViewById(android.R.id.content), "Failed to update username: " + e.getLocalizedMessage(), Snackbar.LENGTH_SHORT).show();
-                        });
+                etUsername.setText(username);
             });
         });
 
@@ -127,31 +123,12 @@ public class ProfileActivity extends AppCompatActivity {
     }
 
     private void loadInitialData() {
-        setLoading(true);
-        UserManager.getInstance().tryLoadUserDocument()
-                .addOnSuccessListener(doc -> {
-                    if (doc.exists()) {
-                        String name = doc.getString("name");
-                        String username = doc.getString("username");
-                        String email = doc.getString("email");
-                        etName.setText(name);
-                        etUsername.setText(username);
-                        etEmail.setText(email);
-                        String profilePicBase64 = doc.getString("profile_picture");
-                        if (profilePicBase64 != null) {
-                            Bitmap profilePicBitmap = base64ToBitmap(profilePicBase64);
-                            if (profilePicBitmap != null) {
-                                ivProfilePic.setImageBitmap(profilePicBitmap);
-                            }
-                        }
-                    } else {
-                        Snackbar.make(findViewById(android.R.id.content), "User not found", Snackbar.LENGTH_SHORT).show();
-                    }
-                })
-                .addOnFailureListener(e -> {
-                    Snackbar.make(findViewById(android.R.id.content), "Failed to load data", Snackbar.LENGTH_SHORT).show();
-                })
-                .addOnCompleteListener(x -> setLoading(false));
+        User u = UserManager.getInstance().getUser();
+        etName.setText(u.getName());
+        etUsername.setText(u.getUsername());
+        etEmail.setText(u.getEmail());
+        ivProfilePic.setImageBitmap(base64ToBitmap(u.getProfilePicture()));
+        tvRegisteredOn.setText(new SimpleDateFormat("dd MMMM yyyy 'at' hh:mm a", Locale.getDefault()).format(u.getRegisteredOn().toDate()));
     }
 
     private void showImagePicker() {
@@ -169,34 +146,27 @@ public class ProfileActivity extends AppCompatActivity {
     }
 
     private void updateProfile() {
-        String name = etName.getText().toString();
+        User u = UserManager.getInstance().getUser();
 
-        if (name.isEmpty()) {
-            Snackbar.make(findViewById(android.R.id.content), "Please fill all fields", Snackbar.LENGTH_SHORT).show();
-            return;
-        } else if (name.length() < 4) {
-            Snackbar.make(findViewById(android.R.id.content), "Name must be at least 4 characters", Snackbar.LENGTH_SHORT).show();
-            return;
-        }
+        if (!u.getUsername().equals(etUsername.getText().toString()))
+            u.setUsername(etUsername.getText().toString());
 
-        HashMap<String, Object> updates = new HashMap<>();
-        updates.put("name", name);
+        if (!u.getName().equals(etName.getText().toString()))
+            u.setName(etName.getText().toString());
 
-        if (updatedProfilePic != null) {
-            String base64Image = bitmapToBase64(updatedProfilePic, 70);
-            updates.put("profile_picture", base64Image);
-        }
+        if (updatedProfilePic != null)
+            u.setProfilePicture(bitmapToBase64(updatedProfilePic, 100));
 
         setLoading(true);
-        UserManager.getInstance().updateUserDocument(updates)
-                .addOnSuccessListener(x -> {
-                    updatedProfilePic = null;
+        UserManager.getInstance().createOrUpdateUserDocument(u)
+                .addOnSuccessListener(aVoid -> {
                     Snackbar.make(findViewById(android.R.id.content), "Profile updated successfully", Snackbar.LENGTH_SHORT).show();
                 })
                 .addOnFailureListener(e -> {
+                    Log.e(TAG, "Failed to update username:", e);
                     Snackbar.make(findViewById(android.R.id.content), "Failed to update profile: " + e.getLocalizedMessage(), Snackbar.LENGTH_SHORT).show();
                 })
-                .addOnCompleteListener(x -> setLoading(false));
+                .addOnCompleteListener(task -> setLoading(false));
     }
 
     // --------------------- Helpers -------------------------

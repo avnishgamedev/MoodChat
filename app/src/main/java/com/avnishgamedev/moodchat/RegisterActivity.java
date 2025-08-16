@@ -14,12 +14,11 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.snackbar.Snackbar;
+import com.google.firebase.Timestamp;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
-
-import java.util.HashMap;
 
 public class RegisterActivity extends AppCompatActivity {
     private static final String TAG = "RegisterActivity";
@@ -142,13 +141,18 @@ public class RegisterActivity extends AppCompatActivity {
             runOnUiThread(() -> {
                 FirebaseUser user = result.getUser();
 
-                HashMap<String, Object> data = new HashMap<>();
-                data.put("username", etUsername.getText().toString());
-                data.put("email", user.getEmail());
-                data.put("name", etName.getText().toString());
-                UserManager.getInstance().updateUserDocument(data)
+                User u = new User(
+                        user.getEmail(),
+                        etName.getText().toString(),
+                        true,
+                        null,
+                        etUsername.getText().toString(),
+                        Timestamp.now(),
+                        Timestamp.now()
+                );
+                UserManager.getInstance().createOrUpdateUserDocument(u)
                         .addOnSuccessListener(aVoid -> {
-                            Log.d(TAG, "handleAuthResult:username:success");
+                            Log.d(TAG, "handleAuthResult:firestore:success");
                             Toast.makeText(this, "Registration Successful! Please login", Toast.LENGTH_SHORT).show();
 
                             Intent i = new Intent(RegisterActivity.this, LoginActivity.class);
@@ -159,7 +163,7 @@ public class RegisterActivity extends AppCompatActivity {
                         })
                         .addOnFailureListener(e -> {
                             Log.w(TAG, "handleAuthResult:failure", e);
-                            Snackbar.make(findViewById(android.R.id.content), "Failed to save username: " + e.getLocalizedMessage(), Snackbar.LENGTH_SHORT).show();
+                            Snackbar.make(findViewById(android.R.id.content), "Failed to save user: " + e.getLocalizedMessage(), Snackbar.LENGTH_SHORT).show();
                             user.delete();
                         });
             });
