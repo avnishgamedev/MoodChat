@@ -1,5 +1,8 @@
 package com.avnishgamedev.moodchat;
 
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.util.Base64;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -58,6 +61,7 @@ public class ConversationAdapter extends RecyclerView.Adapter<ConversationAdapte
                     holder.tvName.setText(user.getName());
                     holder.tvLastMessage.setText(conversation.getLastMessage());
                     holder.tvLastMessageTime.setText(new SimpleDateFormat("hh:mm a", Locale.getDefault()).format(conversation.getLastMessageTimestamp()));
+                    holder.ivProfilePic.setImageBitmap(base64ToBitmap(user.getProfilePicture()));
                 })
                 .addOnFailureListener(e -> {
                     holder.tvName.setText("Unknown");
@@ -70,5 +74,14 @@ public class ConversationAdapter extends RecyclerView.Adapter<ConversationAdapte
     @Override
     public int getItemCount() {
         return conversations.size();
+    }
+
+    // Helpers
+    public static Bitmap base64ToBitmap(String base64Str) {
+        if (base64Str == null) {
+            return null;
+        }
+        byte[] decodedBytes = Base64.decode(base64Str, Base64.DEFAULT);
+        return BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.length);
     }
 }

@@ -1,16 +1,25 @@
 package com.avnishgamedev.moodchat;
 
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
+import android.util.Base64;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.FrameLayout;
+import android.widget.ImageView;
 import android.widget.RelativeLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.progressindicator.CircularProgressIndicator;
+import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.firestore.DocumentChange;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.ListenerRegistration;
@@ -24,9 +33,14 @@ public class ConversationActivity extends AppCompatActivity {
     private static final String TAG = "ConversationActivity";
 
     // Views
+    ImageView ivBack;
+    ImageView ivInfo;
+    TextView tvChatName;
+    RecyclerView rvMessages;
+    MessagesAdapter adapter;
     EditText etMessage;
-    Button btnSend;
-    RelativeLayout rlLoading;
+    FrameLayout flSend;
+    CircularProgressIndicator progressIndicator;
 
     // Meta data
     Conversation conversation;
@@ -59,17 +73,31 @@ public class ConversationActivity extends AppCompatActivity {
     }
 
     private void setupViews() {
+        ivBack = findViewById(R.id.ivBack);
+        ivInfo = findViewById(R.id.ivInfo);
+        tvChatName = findViewById(R.id.tvChatName);
+        rvMessages = findViewById(R.id.rvMessages);
         etMessage = findViewById(R.id.etMessage);
-        btnSend = findViewById(R.id.btnSend);
-        rlLoading = findViewById(R.id.rlLoading);
+        flSend = findViewById(R.id.flSend);
+        progressIndicator = findViewById(R.id.progressIndicator);
 
-        btnSend.setOnClickListener(v -> sendMessage());
+        setLoading(true);
+        ConversationHelpers.getUserByUsername(ConversationHelpers.getOtherUsername(conversation.getId(), UserManager.getInstance().getUser().getUsername()))
+                .addOnSuccessListener(u -> {
+                    adapter = new MessagesAdapter(messages, base64ToBitmap(UserManager.getInstance().getUser().getProfilePicture()), base64ToBitmap(u.getProfilePicture()));
+                    rvMessages.setAdapter(adapter);
+                });
+
+        tvChatName.setText(ConversationHelpers.getOtherUsername(conversation.getId(), UserManager.getInstance().getUser().getUsername()));
+
+        ivBack.setOnClickListener(v -> finish());
+        flSend.setOnClickListener(v -> sendMessage());
     }
 
     private void sendMessage() {
         String text = etMessage.getText().toString();
         if (text.isEmpty()) {
-            Toast.makeText(this, "Message cannot be empty", Toast.LENGTH_SHORT).show();
+            Snackbar.make(flSend, "Message cannot be empty", Snackbar.LENGTH_SHORT).show();
             return;
         }
 
@@ -109,6 +137,7 @@ public class ConversationActivity extends AppCompatActivity {
                         }
                     }
 
+                    rvMessages.scrollToPosition(messages.size() - 1);
                     startMessagesListener();
                 })
                 .addOnFailureListener(e -> {
@@ -138,7 +167,7 @@ public class ConversationActivity extends AppCompatActivity {
                     Message newMessage = dc.getDocument().toObject(Message.class);
                     messages.add(newMessage);
 
-                    // TODO: Update RecyclerView (messages.size() - 1)
+                    adapter.notifyItemInserted(messages.size() - 1);
 
                     if (newMessage.getSenderUsername().equals(ConversationHelpers.getOtherUsername(conversation.getId(), UserManager.getInstance().getUser().getUsername()))) {
                         ConversationHelpers.updateMessageStatus(conversation.getId(), newMessage.getId(), "read")
@@ -152,7 +181,7 @@ public class ConversationActivity extends AppCompatActivity {
                             .orElse(-1);
                     if (index != -1) {
                         messages.set(index, modifiedMessage);
-                        // adapter.notifyItemChanged(index);
+                        adapter.notifyItemChanged(index);
                     } else {
                         Log.w(TAG, "Modified message not found in messages list");
                     }
@@ -168,6 +197,21 @@ public class ConversationActivity extends AppCompatActivity {
     }
 
     private void setLoading(boolean status) {
-        rlLoading.setVisibility(status ? View.VISIBLE : View.GONE);
+        if (status) {
+            rvMessages.setVisibility(View.GONE);
+            progressIndicator.setVisibility(View.VISIBLE);
+        } else {
+            rvMessages.setVisibility(View.VISIBLE);
+            progressIndicator.setVisibility(View.GONE);
+        }
+    }
+
+    // Helpers
+    public static Bitmap base64ToBitmap(String base64Str) {
+        if (base64Str == null) {
+            return null;
+        }
+        byte[] decodedBytes = Base64.decode(base64Str, Base64.DEFAULT);
+        return BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.length);
     }
 }

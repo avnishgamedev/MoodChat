@@ -29,6 +29,7 @@
             android:parentActivityName=".MainActivity" />
         <activity android:name=".LoadMainActivity" />
         <activity android:name=".ConversationActivity"
+            android:windowSoftInputMode="adjustResize"
             android:parentActivityName=".MainActivity" />
         <meta-data
             android:name="preloaded_fonts"
