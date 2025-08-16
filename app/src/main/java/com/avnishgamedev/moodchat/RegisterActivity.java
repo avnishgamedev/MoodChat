@@ -18,7 +18,6 @@ import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.SetOptions;
 
 import java.util.HashMap;
 
@@ -134,10 +133,10 @@ public class RegisterActivity extends AppCompatActivity {
         Log.d(TAG, "registerWithEmail:started");
 
         setLoading(true);
-        handleAuthResult(auth.createUserWithEmailAndPassword(email, password));
+        handleAuthTask(auth.createUserWithEmailAndPassword(email, password));
     }
 
-    private void handleAuthResult(Task<AuthResult> task) {
+    private void handleAuthTask(Task<AuthResult> task) {
         task.addOnSuccessListener(result -> {
             Log.d(TAG, "handleAuthResult:success");
             runOnUiThread(() -> {
@@ -147,7 +146,7 @@ public class RegisterActivity extends AppCompatActivity {
                 data.put("username", etUsername.getText().toString());
                 data.put("email", user.getEmail());
                 data.put("name", etName.getText().toString());
-                FirebaseFirestore.getInstance().collection("users").document(user.getUid()).set(data)
+                UserManager.getInstance().updateUserDocument(data)
                         .addOnSuccessListener(aVoid -> {
                             Log.d(TAG, "handleAuthResult:username:success");
                             Toast.makeText(this, "Registration Successful! Please login", Toast.LENGTH_SHORT).show();

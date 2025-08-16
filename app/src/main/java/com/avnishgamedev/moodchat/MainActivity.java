@@ -89,7 +89,7 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-        loadUserDocument();
+        UserManager.getInstance().tryLoadUserDocument();
     }
 
     @Override
@@ -149,20 +149,6 @@ public class MainActivity extends AppCompatActivity {
         } else {
             startActivity(new Intent(MainActivity.this, LoginActivity.class));
             finish();
-        }
-    }
-
-    // Save user to Firestore stuff
-    private void loadUserDocument() {
-        FirebaseUser user = auth.getCurrentUser();
-        if (user != null) {
-            db.collection("users").document(user.getUid()).get()
-                    .addOnSuccessListener(doc -> {
-                        userDoc = doc;
-                    })
-                    .addOnFailureListener(e -> {
-                        Log.e(TAG, "Failed to load user document: " + e.getLocalizedMessage());
-                    });
         }
     }
 
