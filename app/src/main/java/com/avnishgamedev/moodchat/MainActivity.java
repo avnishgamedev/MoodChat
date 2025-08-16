@@ -15,6 +15,7 @@ import android.widget.Button;
 
 import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -26,7 +27,10 @@ import androidx.credentials.exceptions.ClearCredentialException;
 
 import com.google.android.gms.tasks.Task;
 import com.google.android.gms.tasks.TaskCompletionSource;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.textfield.TextInputEditText;
+import com.google.android.material.textfield.TextInputLayout;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentSnapshot;
@@ -112,7 +116,11 @@ public class MainActivity extends AppCompatActivity {
 
     private void setupViews() {
         fab = findViewById(R.id.fab);
-        // TODO: Show Dialog when fab is clicked, get other person's email, and start a conversation
+        fab.setOnClickListener(v -> {
+            promptUsername().addOnSuccessListener(user -> {
+                // TODO: start a conversation
+            });
+        });
     }
 
     private void signOut() {
@@ -156,5 +164,77 @@ public class MainActivity extends AppCompatActivity {
                         Log.e(TAG, "Failed to load user document: " + e.getLocalizedMessage());
                     });
         }
+    }
+
+    // Helpers
+    public Task<DocumentSnapshot> promptUsername() {
+        final TaskCompletionSource<DocumentSnapshot> taskCompletionSource = new TaskCompletionSource<>();
+
+        TextInputLayout textInputLayout = new TextInputLayout(this);
+        textInputLayout.setHint("Enter other username");
+        TextInputEditText usernameEditText = new TextInputEditText(textInputLayout.getContext());
+        textInputLayout.addView(usernameEditText);
+
+        // Create the MaterialAlertDialog
+        MaterialAlertDialogBuilder dialogBuilder = new MaterialAlertDialogBuilder(this)
+                .setTitle("Start conversation")
+                .setView(textInputLayout)
+                .setCancelable(false)
+                .setNegativeButton("Cancel", (dialog, which) -> taskCompletionSource.setException(new Exception("User cancelled")))
+                .setPositiveButton("Continue", null); // Will override later
+
+        AlertDialog dialog = dialogBuilder.create();
+
+        // Override the positive button click to prevent auto-dismiss
+        dialog.setOnShowListener(dialogInterface -> {
+            Button button = dialog.getButton(AlertDialog.BUTTON_POSITIVE);
+            button.setOnClickListener(v -> {
+                String username = usernameEditText.getText().toString().trim();
+
+                // Clear any previous errors
+                textInputLayout.setError(null);
+
+                // Check if username is more than 4 letters
+                if (username.length() <= 4) {
+                    textInputLayout.setError("Username must be more than 4 letters");
+                    return; // Don't dismiss dialog, let user try again
+                }
+
+                // Call your existing function to check if username is taken
+                getUserByUsername(username).addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        DocumentSnapshot documentSnapshot = task.getResult();
+                        taskCompletionSource.setResult(documentSnapshot);
+                    } else {
+                        textInputLayout.setError(task.getException().getMessage());
+                    }
+                });
+            });
+        });
+
+        dialog.show();
+
+        return taskCompletionSource.getTask();
+    }
+
+    private Task<DocumentSnapshot> getUserByUsername(String username) {
+        TaskCompletionSource<DocumentSnapshot> taskCompletionSource = new TaskCompletionSource<>();
+
+        if (userDoc.getString("username").equals(username)) {
+            taskCompletionSource.setException(new Exception("Cannot start conversation with self!"));
+            return taskCompletionSource.getTask();
+        }
+
+        db.collection("users").whereEqualTo("username", username).get()
+                .addOnSuccessListener(queryDocumentSnapshots -> {
+                    if (queryDocumentSnapshots.isEmpty()) {
+                        taskCompletionSource.setException(new Exception("User not found!"));
+                    } else {
+                        taskCompletionSource.setResult(queryDocumentSnapshots.getDocuments().get(0));
+                    }
+                })
+                .addOnFailureListener(e -> taskCompletionSource.setException(e));
+
+        return taskCompletionSource.getTask();
     }
 }

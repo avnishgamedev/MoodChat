@@ -94,8 +94,8 @@ public class LoadMainActivity extends AppCompatActivity {
 
         // Create TextInputLayout with TextInputEditText for Material styling
         TextInputLayout textInputLayout = new TextInputLayout(this);
+        textInputLayout.setHint("Username");
         TextInputEditText usernameEditText = new TextInputEditText(textInputLayout.getContext());
-        usernameEditText.setHint("Username");
         textInputLayout.addView(usernameEditText);
 
         // Create the MaterialAlertDialog
