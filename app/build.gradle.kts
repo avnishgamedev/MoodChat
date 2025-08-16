@@ -42,6 +42,10 @@ dependencies {
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
 
+    // App Lifecycle
+    implementation(libs.androidx.lifecycle.lifecycle.common)
+    implementation(libs.lifecycle.process)
+
     // Firebase
     implementation(platform("com.google.firebase:firebase-bom:34.1.0"))
     implementation("com.google.firebase:firebase-analytics")
