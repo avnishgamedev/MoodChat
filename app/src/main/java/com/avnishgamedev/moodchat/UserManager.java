@@ -22,6 +22,7 @@ public class UserManager {
     private FirebaseUser user;
 
     private DocumentSnapshot userDoc;
+    private boolean pendingUserOnlineStatusUpdate = false;
 
     private UserManager() {
         auth = FirebaseAuth.getInstance();
@@ -31,6 +32,8 @@ public class UserManager {
         auth.addAuthStateListener(auth -> {
             user = auth.getCurrentUser();
             Log.d(TAG, "AuthStateChange - Login status: " + (user != null));
+
+            setUserOnlineStatus(user != null);
         });
     }
 
@@ -53,6 +56,10 @@ public class UserManager {
                         if (doc.exists()) {
                             userDoc = doc;
                             completionSource.setResult(doc);
+
+                            if (pendingUserOnlineStatusUpdate) {
+                                setUserOnlineStatus(true);
+                            }
                         } else {
                             Log.w(TAG, "tryLoadUserDocument: User Document doesn't exist!");
                         }
@@ -75,6 +82,25 @@ public class UserManager {
         } else {
             completionSource.setException(new Exception("User document doesn't exist!"));
             return completionSource.getTask();
+        }
+    }
+
+    public void setUserOnlineStatus(boolean online) {
+        Map<String, Object> updates = Map.of("online", online);
+        if (user != null) {
+            db.collection("users").document(user.getUid()).set(updates, SetOptions.merge())
+                    .addOnFailureListener(e -> {
+                        Log.e(TAG, "Failed to update user online status: " + e.getLocalizedMessage());
+                    });
+            pendingUserOnlineStatusUpdate = false;
+        } else if (userDoc != null) {
+            userDoc.getReference().set(updates)
+                    .addOnFailureListener(e -> {
+                        Log.e(TAG, "Failed to update user online status via userDoc: " + e.getLocalizedMessage());
+                    });
+            pendingUserOnlineStatusUpdate = false;
+        } else {
+            pendingUserOnlineStatusUpdate = online;
         }
     }
 }

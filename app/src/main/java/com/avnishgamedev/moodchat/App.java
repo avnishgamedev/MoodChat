@@ -18,10 +18,12 @@ public class App extends Application implements DefaultLifecycleObserver {
     @Override
     public void onStart(LifecycleOwner owner) {
         Log.d("MoodChatLifeCycle", "onStart");
+        UserManager.getInstance().setUserOnlineStatus(true);
     }
 
     @Override
     public void onStop(LifecycleOwner owner) {
         Log.d("MoodChatLifeCycle", "onStop");
+        UserManager.getInstance().setUserOnlineStatus(false);
     }
 }
