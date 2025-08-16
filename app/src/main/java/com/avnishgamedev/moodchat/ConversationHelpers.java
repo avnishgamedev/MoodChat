@@ -1,16 +1,21 @@
 package com.avnishgamedev.moodchat;
 
 import com.google.android.gms.tasks.Task;
+import com.google.android.gms.tasks.Tasks;
 import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.SetOptions;
 import com.google.firebase.firestore.WriteBatch;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class ConversationHelpers {
@@ -69,6 +74,53 @@ public class ConversationHelpers {
                 .update("status", newStatus);
     }
 
+    public static Task<User> getUserByUsername(String username) {
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        return db.collection("users").whereEqualTo("username", username).get().continueWithTask(task -> {
+            if (task.isSuccessful()) {
+                if (!task.getResult().isEmpty()) {
+                    DocumentSnapshot doc = task.getResult().getDocuments().get(0);
+                    return Tasks.forResult(doc.toObject(User.class));
+                }
+                return Tasks.forException(new UserNotFoundException());
+            } else {
+                return Tasks.forException(task.getException());
+            }
+        });
+    }
+
+    public static String getOtherUsername(String conversationId, String currentUsername) {
+        return conversationId.replace(currentUsername, "").replace("_", "");
+    }
+
+    public static Task<List<Conversation>> getConversations(String username) {
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        return db.collection("conversation")
+                .whereArrayContains("members", username)
+                .get()
+                .continueWith(task -> {
+                    if (task.isSuccessful()) {
+                        List<Conversation> list = new ArrayList<>();
+                        for (DocumentSnapshot doc : task.getResult().getDocuments()) {
+                            Conversation c = doc.toObject(Conversation.class);
+                            if (c != null) {
+                                c.setId(doc.getId());
+                                list.add(c);
+                            }
+                        }
+                        return list;
+                    } else {
+                        return List.of();
+                    }
+                });
+    }
+
+    public static Query getConversationsQuery(String username) {
+        return FirebaseFirestore.getInstance()
+                .collection("conversation")
+                .whereArrayContains("members", username)
+                .orderBy("lastMessageTimestamp", Query.Direction.DESCENDING);
+    }
 
     // ----------------- Helpers ----------------
 
@@ -82,5 +134,11 @@ public class ConversationHelpers {
 
     private static CollectionReference messagesRef(FirebaseFirestore db, String conversationId) {
         return conversationRef(db, conversationId).collection("messages");
+    }
+
+    private static class UserNotFoundException extends Exception {
+        public UserNotFoundException() {
+            super("User not found!");
+        }
     }
 }

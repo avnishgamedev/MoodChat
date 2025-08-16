@@ -7,7 +7,9 @@ import android.os.CancellationSignal;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.Button;
+import android.widget.RelativeLayout;
 
 import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
@@ -20,6 +22,7 @@ import androidx.credentials.CredentialManager;
 import androidx.credentials.ClearCredentialStateRequest;
 import androidx.credentials.CredentialManagerCallback;
 import androidx.credentials.exceptions.ClearCredentialException;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.gms.tasks.Task;
 import com.google.android.gms.tasks.TaskCompletionSource;
@@ -32,7 +35,11 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.ListenerRegistration;
+import com.google.firebase.firestore.Query;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.Executors;
 
 public class MainActivity extends AppCompatActivity {
@@ -40,10 +47,15 @@ public class MainActivity extends AppCompatActivity {
 
     // Views
     FloatingActionButton fab;
+    RecyclerView rvConversations;
+    ConversationAdapter adapter;
+    RelativeLayout rlLoading;
 
     // Meta data
     FirebaseAuth auth;
     FirebaseFirestore db;
+    List<Conversation> conversations;
+    ListenerRegistration conversationsRegistration;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,6 +73,7 @@ public class MainActivity extends AppCompatActivity {
 
         setupToolbar();
         setupViews();
+        startConversationsListener();
     }
 
     @Override
@@ -78,8 +91,6 @@ public class MainActivity extends AppCompatActivity {
             finish();
             return;
         }
-
-        UserManager.getInstance().loadUser();
     }
 
     @Override
@@ -100,6 +111,12 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
+    @Override
+    protected void onDestroy() {
+        stopConversationsListener();
+        super.onDestroy();
+    }
+
     private void setupToolbar() {
         setSupportActionBar(findViewById(R.id.materialToolbar));
     }
@@ -107,7 +124,69 @@ public class MainActivity extends AppCompatActivity {
     private void setupViews() {
         fab = findViewById(R.id.fab);
         fab.setOnClickListener(v -> startConversation());
+
+        rvConversations = findViewById(R.id.rvConversations);
+        conversations = new ArrayList<>();
+        adapter = new ConversationAdapter(conversations, (parent, view, position, id) -> {
+            Conversation selectedConversation = conversations.get(position);
+            Snackbar.make(view, "Selected conversation: " + selectedConversation.getId(), Snackbar.LENGTH_SHORT).show();
+        });
+        rvConversations.setAdapter(adapter);
+
+        rlLoading = findViewById(R.id.rlLoading);
     }
+
+    private void startConversationsListener() {
+        setLoading(true);
+
+        UserManager.getInstance().loadUser()
+                .addOnSuccessListener(user -> {
+                    // Obtain a Firestore query for this user's conversations
+                    // e.g., whereArrayContains("members", user.getUid()) or deterministic IDs if you store a mirror
+                    Query query = ConversationHelpers.getConversationsQuery(user.getUsername());
+
+                    conversationsRegistration = query.addSnapshotListener((snap, e) -> {
+                        setLoading(false);
+
+                        if (e != null) {
+                            Log.e(TAG, "Conversations listen failed", e);
+                            return;
+                        }
+                        if (snap == null) {
+                            Log.w(TAG, "Conversations snapshot is null");
+                            return;
+                        }
+
+                        // Option A: Replace entire list on each event (simple, stable)
+                        List<Conversation> fresh = new ArrayList<>();
+                        for (DocumentSnapshot d : snap.getDocuments()) {
+                            Conversation c = d.toObject(Conversation.class);
+                            if (c != null) {
+                                c.setId(d.getId());
+                                fresh.add(c);
+                            }
+                        }
+                        conversations.clear();
+                        conversations.addAll(fresh);
+                        adapter.notifyDataSetChanged();
+                        Log.d(TAG, "Conversations updated (full): " + conversations.size());
+
+                        // Option B (advanced): use DocumentChange to incrementally update the adapter
+                        // for (DocumentChange dc : snap.getDocumentChanges()) { ... }
+                    });
+                })
+                .addOnFailureListener(err -> {
+                    setLoading(false);
+                    Log.e(TAG, "Failed to load user for conversations listener", err);
+                });
+    }
+    private void stopConversationsListener() {
+        if (conversationsRegistration != null) {
+            conversationsRegistration.remove();
+            conversationsRegistration = null;
+        }
+    }
+
 
     private void startConversation() {
         promptUsername().addOnSuccessListener(user -> {
@@ -223,5 +302,9 @@ public class MainActivity extends AppCompatActivity {
                 .addOnFailureListener(e -> taskCompletionSource.setException(e));
 
         return taskCompletionSource.getTask();
+    }
+
+    private void setLoading(boolean status) {
+        rlLoading.setVisibility(status ? View.VISIBLE : View.GONE);
     }
 }
