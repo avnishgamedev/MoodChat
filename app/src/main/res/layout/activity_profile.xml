@@ -26,12 +26,14 @@
             android:layout_gravity="center"
             android:layout_marginTop="20dp">
 
-            <ImageView
+            <de.hdodenhof.circleimageview.CircleImageView
                 android:id="@+id/ivProfilePic"
                 android:layout_width="128dp"
                 android:layout_height="128dp"
                 android:clickable="true"
-                android:src="@drawable/ic_person" />
+                android:src="@drawable/ic_person"
+                app:civ_border_width="2dp"
+                app:civ_border_overlay="true" />
 
             <ImageView
                 android:layout_width="wrap_content"
