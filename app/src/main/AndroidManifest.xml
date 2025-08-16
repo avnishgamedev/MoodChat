@@ -28,6 +28,8 @@
         <activity android:name=".ProfileActivity"
             android:parentActivityName=".MainActivity" />
         <activity android:name=".LoadMainActivity" />
+        <activity android:name=".ConversationActivity"
+            android:parentActivityName=".MainActivity" />
         <meta-data
             android:name="preloaded_fonts"
             android:resource="@array/preloaded_fonts" />

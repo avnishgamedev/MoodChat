@@ -93,28 +93,6 @@ public class ConversationHelpers {
         return conversationId.replace(currentUsername, "").replace("_", "");
     }
 
-    public static Task<List<Conversation>> getConversations(String username) {
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
-        return db.collection("conversation")
-                .whereArrayContains("members", username)
-                .get()
-                .continueWith(task -> {
-                    if (task.isSuccessful()) {
-                        List<Conversation> list = new ArrayList<>();
-                        for (DocumentSnapshot doc : task.getResult().getDocuments()) {
-                            Conversation c = doc.toObject(Conversation.class);
-                            if (c != null) {
-                                c.setId(doc.getId());
-                                list.add(c);
-                            }
-                        }
-                        return list;
-                    } else {
-                        return List.of();
-                    }
-                });
-    }
-
     public static Query getConversationsQuery(String username) {
         return FirebaseFirestore.getInstance()
                 .collection("conversation")
