@@ -1,20 +1,20 @@
 package com.avnishgamedev.moodchat;
 
-import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.DocumentId;
-import com.google.firebase.firestore.ServerTimestamp;
 
+import java.io.Serializable;
+import java.util.Date;
 import java.util.List;
 
-public class Conversation {
+public class Conversation implements Serializable {
     @DocumentId
     private String id;
     private List<String> members;
     private String lastMessage;
-    private Timestamp lastMessageTimestamp;
+    private Date lastMessageTimestamp;
 
     public Conversation() {}
-    public Conversation(List<String> members, String lastMessage, Timestamp lastMessageTimestamp) {
+    public Conversation(List<String> members, String lastMessage, Date lastMessageTimestamp) {
         this.members = members;
         this.lastMessage = lastMessage;
         this.lastMessageTimestamp = lastMessageTimestamp;
@@ -41,10 +41,10 @@ public class Conversation {
         this.lastMessage = lastMessage;
     }
 
-    public Timestamp getLastMessageTimestamp() {
+    public Date getLastMessageTimestamp() {
         return lastMessageTimestamp;
     }
-    public void setLastMessageTimestamp(Timestamp lastMessageTimestamp) {
+    public void setLastMessageTimestamp(Date lastMessageTimestamp) {
         this.lastMessageTimestamp = lastMessageTimestamp;
     }
 }

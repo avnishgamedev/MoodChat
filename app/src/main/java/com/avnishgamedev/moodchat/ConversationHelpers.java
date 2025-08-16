@@ -32,7 +32,7 @@ public class ConversationHelpers {
         Conversation conv = new Conversation(
                 Arrays.asList(currentUsername, otherUsername),
                 "", // lastMessage initially empty
-                Timestamp.now()
+                Timestamp.now().toDate()
         );
 
         return convRef.set(conv, SetOptions.merge());
@@ -98,6 +98,14 @@ public class ConversationHelpers {
                 .collection("conversation")
                 .whereArrayContains("members", username)
                 .orderBy("lastMessageTimestamp", Query.Direction.DESCENDING);
+    }
+
+    public static Query getMessagesQuery(String conversationId) {
+        return FirebaseFirestore.getInstance()
+                .collection("conversation")
+                .document(conversationId)
+                .collection("messages")
+                .orderBy("sentAt", Query.Direction.ASCENDING);
     }
 
     // ----------------- Helpers ----------------

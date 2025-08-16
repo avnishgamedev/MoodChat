@@ -38,6 +38,7 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.ListenerRegistration;
 import com.google.firebase.firestore.Query;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executors;
@@ -129,7 +130,9 @@ public class MainActivity extends AppCompatActivity {
         conversations = new ArrayList<>();
         adapter = new ConversationAdapter(conversations, (parent, view, position, id) -> {
             Conversation selectedConversation = conversations.get(position);
-            Snackbar.make(view, "Selected conversation: " + selectedConversation.getId(), Snackbar.LENGTH_SHORT).show();
+            Intent i = new Intent(MainActivity.this, ConversationActivity.class);
+            i.putExtra("conversation", (Serializable) selectedConversation);
+            startActivity(i);
         });
         rvConversations.setAdapter(adapter);
 
@@ -157,7 +160,6 @@ public class MainActivity extends AppCompatActivity {
                             return;
                         }
 
-                        // Option A: Replace entire list on each event (simple, stable)
                         List<Conversation> fresh = new ArrayList<>();
                         for (DocumentSnapshot d : snap.getDocuments()) {
                             Conversation c = d.toObject(Conversation.class);
@@ -170,9 +172,6 @@ public class MainActivity extends AppCompatActivity {
                         conversations.addAll(fresh);
                         adapter.notifyDataSetChanged();
                         Log.d(TAG, "Conversations updated (full): " + conversations.size());
-
-                        // Option B (advanced): use DocumentChange to incrementally update the adapter
-                        // for (DocumentChange dc : snap.getDocumentChanges()) { ... }
                     });
                 })
                 .addOnFailureListener(err -> {

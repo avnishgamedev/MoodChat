@@ -57,7 +57,7 @@ public class ConversationAdapter extends RecyclerView.Adapter<ConversationAdapte
                 .addOnSuccessListener(user -> {
                     holder.tvName.setText(user.getName());
                     holder.tvLastMessage.setText(conversation.getLastMessage());
-                    holder.tvLastMessageTime.setText(new SimpleDateFormat("hh:mm a", Locale.getDefault()).format(conversation.getLastMessageTimestamp().toDate()));
+                    holder.tvLastMessageTime.setText(new SimpleDateFormat("hh:mm a", Locale.getDefault()).format(conversation.getLastMessageTimestamp()));
                 })
                 .addOnFailureListener(e -> {
                     holder.tvName.setText("Unknown");
