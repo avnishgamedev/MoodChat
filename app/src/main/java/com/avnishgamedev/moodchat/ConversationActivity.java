@@ -1,5 +1,7 @@
 package com.avnishgamedev.moodchat;
 
+import static com.avnishgamedev.moodchat.MessagesAdapter.base64ToBitmap;
+
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
@@ -34,8 +36,10 @@ public class ConversationActivity extends AppCompatActivity {
 
     // Views
     ImageView ivBack;
-    ImageView ivInfo;
+    ImageView ivProfilePic;
     TextView tvChatName;
+    TextView tvChatUsername;
+    ImageView ivStatus;
     RecyclerView rvMessages;
     MessagesAdapter adapter;
     EditText etMessage;
@@ -46,6 +50,8 @@ public class ConversationActivity extends AppCompatActivity {
     Conversation conversation;
     List<Message> messages;
     ListenerRegistration messagesRegistration;
+    User thisUser;
+    User otherUser;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -74,21 +80,14 @@ public class ConversationActivity extends AppCompatActivity {
 
     private void setupViews() {
         ivBack = findViewById(R.id.ivBack);
-        ivInfo = findViewById(R.id.ivInfo);
+        ivProfilePic = findViewById(R.id.ivProfilePic);
         tvChatName = findViewById(R.id.tvChatName);
+        tvChatUsername = findViewById(R.id.tvChatUsername);
+        ivStatus = findViewById(R.id.ivStatus);
         rvMessages = findViewById(R.id.rvMessages);
         etMessage = findViewById(R.id.etMessage);
         flSend = findViewById(R.id.flSend);
         progressIndicator = findViewById(R.id.progressIndicator);
-
-        setLoading(true);
-        ConversationHelpers.getUserByUsername(ConversationHelpers.getOtherUsername(conversation.getId(), UserManager.getInstance().getUser().getUsername()))
-                .addOnSuccessListener(u -> {
-                    adapter = new MessagesAdapter(messages, base64ToBitmap(UserManager.getInstance().getUser().getProfilePicture()), base64ToBitmap(u.getProfilePicture()));
-                    rvMessages.setAdapter(adapter);
-                });
-
-        tvChatName.setText(ConversationHelpers.getOtherUsername(conversation.getId(), UserManager.getInstance().getUser().getUsername()));
 
         ivBack.setOnClickListener(v -> finish());
         flSend.setOnClickListener(v -> sendMessage());
@@ -121,6 +120,21 @@ public class ConversationActivity extends AppCompatActivity {
     }
 
     private void loadInitialData() {
+        setLoading(true);
+        thisUser = UserManager.getInstance().getUser();
+        ConversationHelpers.getUserByUsername(ConversationHelpers.getOtherUsername(conversation.getId(), thisUser.getUsername()))
+                .addOnSuccessListener(u -> {
+                    otherUser = u;
+                    adapter = new MessagesAdapter(messages, thisUser, otherUser);
+                    rvMessages.setAdapter(adapter);
+
+                    tvChatName.setText(otherUser.getName());
+                    tvChatUsername.setText(otherUser.getUsername());
+                    ivProfilePic.setImageBitmap(base64ToBitmap(otherUser.getProfilePicture()));
+                    ivStatus.setImageResource(otherUser.isOnline() ? R.drawable.circle_online : R.drawable.circle_offline);
+                })
+                .addOnFailureListener(e -> Log.w(TAG, "Failed to load otherUser!", e));
+
         // First we load last 10 messages, then we start realtime listener
         ConversationHelpers.getMessagesQuery(conversation.getId()).limit(10).get()
                 .addOnSuccessListener(snap -> {
@@ -204,14 +218,5 @@ public class ConversationActivity extends AppCompatActivity {
             rvMessages.setVisibility(View.VISIBLE);
             progressIndicator.setVisibility(View.GONE);
         }
-    }
-
-    // Helpers
-    public static Bitmap base64ToBitmap(String base64Str) {
-        if (base64Str == null) {
-            return null;
-        }
-        byte[] decodedBytes = Base64.decode(base64Str, Base64.DEFAULT);
-        return BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.length);
     }
 }

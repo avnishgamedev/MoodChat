@@ -22,6 +22,7 @@
         android:background="@drawable/background_received_message"
         android:padding="12dp"
         android:textSize="14sp"
+        android:textColor="#000000"
         app:layout_goneMarginStart="5dp"
         app:layout_constraintStart_toEndOf="@id/ivProfile"
         app:layout_constraintTop_toTopOf="parent" />

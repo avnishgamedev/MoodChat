@@ -33,30 +33,58 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <ImageView
-            android:id="@+id/ivInfo"
-            android:layout_width="30dp"
-            android:layout_height="30dp"
+        <FrameLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:layout_marginEnd="16dp"
             android:layout_marginTop="12dp"
-            android:src="@drawable/ic_info"
-            app:tint="@color/material_dynamic_secondary50"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="parent">
+
+            <de.hdodenhof.circleimageview.CircleImageView
+                android:id="@+id/ivProfilePic"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:src="@drawable/ic_person"
+                app:tint="@color/material_dynamic_secondary50"
+                />
+
+            <ImageView
+                android:id="@+id/ivStatus"
+                android:layout_width="8dp"
+                android:layout_height="8dp"
+                android:src="@drawable/circle_offline"
+                android:layout_gravity="bottom|end" />
+
+        </FrameLayout>
 
         <TextView
             android:id="@+id/tvChatName"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="14dp"
+            android:layout_marginTop="8dp"
             android:layout_marginHorizontal="20dp"
             android:text="Chat Name"
             android:gravity="center"
             android:textColor="@color/black"
             android:textStyle="bold"
-            app:layout_constraintEnd_toStartOf="@id/ivInfo"
+            app:layout_constraintEnd_toStartOf="@id/ivProfilePic"
             app:layout_constraintStart_toEndOf="@+id/ivBack"
             app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/tvChatUsername"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:layout_marginHorizontal="20dp"
+            android:text="chat_username"
+            android:textSize="10sp"
+            android:gravity="center"
+            android:textColor="@color/black"
+            app:layout_constraintEnd_toStartOf="@id/ivProfilePic"
+            app:layout_constraintStart_toEndOf="@+id/ivBack"
+            app:layout_constraintTop_toBottomOf="@id/tvChatName" />
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rvMessages"

@@ -1,6 +1,8 @@
 package com.avnishgamedev.moodchat;
 
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.util.Base64;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -29,13 +31,14 @@ public class MessagesAdapter extends RecyclerView.Adapter<MessagesAdapter.ViewHo
         }
     }
 
-    private List<Message> messages;
-    private Bitmap selfProfilePic;
-    private Bitmap otherProfilePic;
-    public MessagesAdapter(List<Message> messages, Bitmap selfProfilePic, Bitmap otherProfilePic) {
+    private final List<Message> messages;
+    private final User thisUser;
+    private final User otherUser;
+    private int lastIndex = -1;
+    public MessagesAdapter(List<Message> messages, User thisUser, User otherUser) {
         this.messages = messages;
-        this.selfProfilePic = selfProfilePic;
-        this.otherProfilePic = otherProfilePic;
+        this.thisUser = thisUser;
+        this.otherUser = otherUser;
     }
 
     @Override
@@ -59,20 +62,39 @@ public class MessagesAdapter extends RecyclerView.Adapter<MessagesAdapter.ViewHo
         holder.tvMessage.setText(message.getMessage());
         holder.tvTimestamp.setText(new SimpleDateFormat("hh:mm a", Locale.getDefault()).format(message.getSentAt().toDate()));
 
+        if (position == messages.size() - 1 && message.getSenderUsername().equals(UserManager.getInstance().getUser().getUsername())) {
+            if (lastIndex != -1) {
+                lastIndex = holder.getAdapterPosition();
+                notifyItemChanged(lastIndex);
+            }
+            lastIndex = holder.getAdapterPosition();
+        }
+
         if (message.getSenderUsername().equals(UserManager.getInstance().getUser().getUsername())) {
-            holder.ivProfile.setImageBitmap(selfProfilePic);
-            if (messages.get(messages.size() - 1).getId().equals(message.getId())) {
-                TextView tvStatus = holder.itemView.findViewById(R.id.tvStatus);
+            holder.ivProfile.setImageBitmap(base64ToBitmap(thisUser.getProfilePicture()));
+            TextView tvStatus = holder.itemView.findViewById(R.id.tvStatus);
+            if (holder.getAdapterPosition() == lastIndex) {
                 tvStatus.setVisibility(View.VISIBLE);
                 tvStatus.setText(message.getStatus());
+            } else {
+                tvStatus.setVisibility(View.GONE);
             }
         } else {
-            holder.ivProfile.setImageBitmap(otherProfilePic);
+            holder.ivProfile.setImageBitmap(base64ToBitmap(otherUser.getProfilePicture()));
         }
     }
 
     @Override
     public int getItemCount() {
         return messages.size();
+    }
+
+    // Helpers
+    public static Bitmap base64ToBitmap(String base64Str) {
+        if (base64Str == null) {
+            return null;
+        }
+        byte[] decodedBytes = Base64.decode(base64Str, Base64.DEFAULT);
+        return BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.length);
     }
 }
