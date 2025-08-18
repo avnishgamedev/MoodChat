@@ -228,6 +228,8 @@ public class ConversationActivity extends AppCompatActivity {
                     Message newMessage = dc.getDocument().toObject(Message.class);
                     messages.add(newMessage);
 
+                    Log.d(TAG, "New message");
+
                     adapter.notifyItemInserted(messages.size() - 1);
                     rvMessages.scrollToPosition(messages.size() - 1);
 

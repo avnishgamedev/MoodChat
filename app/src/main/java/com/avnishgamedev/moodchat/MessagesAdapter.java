@@ -65,11 +65,11 @@ public class MessagesAdapter extends RecyclerView.Adapter<MessagesAdapter.ViewHo
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
         Message message = messages.get(position);
-        holder.tvMessage.setText(message.getMessage());
+        holder.tvMessage.setText(message.getMessage().trim());
         holder.tvTimestamp.setText(new SimpleDateFormat("hh:mm a", Locale.getDefault()).format(message.getSentAt().toDate()));
 
         if (position == messages.size() - 1 && message.getSenderUsername().equals(UserManager.getInstance().getUser().getUsername())) {
-            if (lastIndex != -1) {
+            if (lastIndex != -1 && holder.getAdapterPosition() != lastIndex) {
                 lastIndex = holder.getAdapterPosition();
                 holder.itemView.post(() -> notifyItemChanged(lastIndex));
             }
