@@ -1,7 +1,9 @@
 package com.avnishgamedev.moodchat;
 
+import android.content.res.ColorStateList;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.util.Base64;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -35,6 +37,10 @@ public class MessagesAdapter extends RecyclerView.Adapter<MessagesAdapter.ViewHo
     private final User thisUser;
     private final User otherUser;
     private int lastIndex = -1;
+    private String sentBubbleColour = "@null";
+    private String receivedBubbleColour = "@null";
+    private String senTextColour = "@null";
+    private String receivedTextColour = "@null";
     public MessagesAdapter(List<Message> messages, User thisUser, User otherUser) {
         this.messages = messages;
         this.thisUser = thisUser;
@@ -82,6 +88,11 @@ public class MessagesAdapter extends RecyclerView.Adapter<MessagesAdapter.ViewHo
         } else {
             holder.ivProfile.setImageBitmap(base64ToBitmap(otherUser.getProfilePicture()));
         }
+
+        if (!sentBubbleColour.equals("@null") && !receivedBubbleColour.equals("@null")) {
+            holder.tvMessage.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor(holder.getItemViewType() == VIEW_TYPE_SENT ? sentBubbleColour : receivedBubbleColour)));
+            holder.tvMessage.setTextColor(Color.parseColor(holder.getItemViewType() == VIEW_TYPE_SENT ? senTextColour : receivedTextColour));
+        }
     }
 
     @Override
@@ -96,5 +107,13 @@ public class MessagesAdapter extends RecyclerView.Adapter<MessagesAdapter.ViewHo
         }
         byte[] decodedBytes = Base64.decode(base64Str, Base64.DEFAULT);
         return BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.length);
+    }
+
+    public void setBubbleColours(String sentBubbleColour, String receivedBubbleColour, String senTextColour, String receivedTextColour) {
+        this.sentBubbleColour = sentBubbleColour;
+        this.receivedBubbleColour = receivedBubbleColour;
+        this.senTextColour = senTextColour;
+        this.receivedTextColour = receivedTextColour;
+        notifyDataSetChanged();
     }
 }

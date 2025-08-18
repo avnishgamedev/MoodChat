@@ -38,7 +38,8 @@ public class ConversationHelpers {
         Conversation conv = new Conversation(
                 Arrays.asList(currentUsername, otherUsername),
                 "", // lastMessage initially empty
-                Timestamp.now().toDate()
+                Timestamp.now().toDate(),
+                null
         );
 
         return convRef.set(conv, SetOptions.merge());
@@ -111,6 +112,10 @@ public class ConversationHelpers {
         return res.getTask();
     }
 
+    public static Task<Void> updateConversation(String conversationId, Map<String, Object> data) {
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        return conversationRef(db, conversationId).update(data);
+    }
 
     public static String getOtherUsername(String conversationId, String currentUsername) {
         return conversationId.replace(currentUsername, "").replace("_", "");

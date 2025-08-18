@@ -6,6 +6,7 @@
     android:fitsSystemWindows="true">
 
     <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/constraintLayout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:animateLayoutChanges="true"
@@ -146,6 +147,7 @@
                 android:backgroundTint="@null">
 
                 <ImageView
+                    android:id="@+id/ivIcSend"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:src="@drawable/ic_send"

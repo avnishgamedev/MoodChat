@@ -12,12 +12,14 @@ public class Conversation implements Serializable {
     private List<String> members;
     private String lastMessage;
     private Date lastMessageTimestamp;
+    private ConversationThemeData themeData;
 
     public Conversation() {}
-    public Conversation(List<String> members, String lastMessage, Date lastMessageTimestamp) {
+    public Conversation(List<String> members, String lastMessage, Date lastMessageTimestamp, ConversationThemeData themeData) {
         this.members = members;
         this.lastMessage = lastMessage;
         this.lastMessageTimestamp = lastMessageTimestamp;
+        this.themeData = themeData;
     }
 
     public String getId() {
@@ -46,5 +48,12 @@ public class Conversation implements Serializable {
     }
     public void setLastMessageTimestamp(Date lastMessageTimestamp) {
         this.lastMessageTimestamp = lastMessageTimestamp;
+    }
+
+    public ConversationThemeData getThemeData() {
+        return themeData;
+    }
+    public void setThemeData(ConversationThemeData themeData) {
+        this.themeData = themeData;
     }
 }

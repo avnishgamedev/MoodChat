@@ -2,22 +2,20 @@ package com.avnishgamedev.moodchat;
 
 import static com.avnishgamedev.moodchat.MessagesAdapter.base64ToBitmap;
 
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
+import android.content.res.ColorStateList;
+import android.graphics.Color;
 import android.os.Bundle;
-import android.util.Base64;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.progressindicator.CircularProgressIndicator;
@@ -28,6 +26,7 @@ import com.google.firebase.firestore.ListenerRegistration;
 import com.google.firebase.firestore.Query;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.stream.IntStream;
 
@@ -35,6 +34,8 @@ public class ConversationActivity extends AppCompatActivity {
     private static final String TAG = "ConversationActivity";
 
     // Views
+    ConstraintLayout constraintLayout;
+    View viewBackground;
     ImageView ivBack;
     ImageView ivProfilePic;
     TextView tvChatName;
@@ -44,6 +45,7 @@ public class ConversationActivity extends AppCompatActivity {
     MessagesAdapter adapter;
     EditText etMessage;
     FrameLayout flSend;
+    ImageView ivIcSend;
     CircularProgressIndicator progressIndicator;
 
     // Meta data
@@ -79,6 +81,8 @@ public class ConversationActivity extends AppCompatActivity {
     }
 
     private void setupViews() {
+        constraintLayout = findViewById(R.id.constraintLayout);
+        viewBackground = findViewById(R.id.viewBackground);
         ivBack = findViewById(R.id.ivBack);
         ivProfilePic = findViewById(R.id.ivProfilePic);
         tvChatName = findViewById(R.id.tvChatName);
@@ -87,6 +91,7 @@ public class ConversationActivity extends AppCompatActivity {
         rvMessages = findViewById(R.id.rvMessages);
         etMessage = findViewById(R.id.etMessage);
         flSend = findViewById(R.id.flSend);
+        ivIcSend = findViewById(R.id.ivIcSend);
         progressIndicator = findViewById(R.id.progressIndicator);
 
         ivBack.setOnClickListener(v -> finish());
@@ -117,6 +122,14 @@ public class ConversationActivity extends AppCompatActivity {
                Toast.makeText(this, "Failed to send message", Toast.LENGTH_SHORT).show();
            }
         });
+
+        AiHelper.getInstance().promptForTheme(text).addOnSuccessListener(theme -> {
+            setThemeFromData(theme);
+            conversation.setThemeData(theme);
+            ConversationHelpers.updateConversation(conversation.getId(), new HashMap<String, Object>() {{
+                put("themeData", theme);
+            }});
+        });
     }
 
     private void loadInitialData() {
@@ -143,11 +156,17 @@ public class ConversationActivity extends AppCompatActivity {
             ivProfilePic.setImageBitmap(base64ToBitmap(otherUser.getProfilePicture()));
             ivStatus.setImageResource(otherUser.isOnline() ? R.drawable.circle_online : R.drawable.circle_offline);
         });
+
+        setThemeFromData(conversation.getThemeData());
     }
 
     private void initialiseAdapter() {
         adapter = new MessagesAdapter(messages, thisUser, otherUser);
         rvMessages.setAdapter(adapter);
+
+        if (conversation.getThemeData() != null) {
+            setThemeFromData(conversation.getThemeData());
+        }
 
         // First we load last 10 messages, then we start realtime listener
         ConversationHelpers.getMessagesQuery(conversation.getId()).limit(10).get()
@@ -232,6 +251,19 @@ public class ConversationActivity extends AppCompatActivity {
         } else {
             rvMessages.setVisibility(View.VISIBLE);
             progressIndicator.setVisibility(View.GONE);
+        }
+    }
+
+    private void setThemeFromData(ConversationThemeData data) {
+        if (data != null) {
+            viewBackground.setBackgroundColor(Color.parseColor(data.getBackground()));
+            constraintLayout.setBackgroundColor(Color.parseColor(data.getSurrounding()));
+            etMessage.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor(data.getMessageBackground())));
+            etMessage.setTextColor(Color.parseColor(data.getMessageTextColour()));
+            flSend.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor(data.getSendBackground())));
+            ivIcSend.setImageTintList(ColorStateList.valueOf(Color.parseColor(data.getSendIconTint())));
+            if (adapter != null)
+                adapter.setBubbleColours(data.getSentBubbleColour(), data.getReceivedBubbleColour(), data.getSentTextColour(), data.getReceivedTextColour());
         }
     }
 }
