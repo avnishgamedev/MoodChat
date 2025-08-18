@@ -13,6 +13,7 @@ public class App extends Application implements DefaultLifecycleObserver {
     public void onCreate() {
         super.onCreate();
         ProcessLifecycleOwner.get().getLifecycle().addObserver(this);
+        AiHelper.getInstance();
     }
 
     @Override

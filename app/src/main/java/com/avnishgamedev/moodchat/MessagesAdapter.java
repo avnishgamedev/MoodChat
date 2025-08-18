@@ -65,7 +65,7 @@ public class MessagesAdapter extends RecyclerView.Adapter<MessagesAdapter.ViewHo
         if (position == messages.size() - 1 && message.getSenderUsername().equals(UserManager.getInstance().getUser().getUsername())) {
             if (lastIndex != -1) {
                 lastIndex = holder.getAdapterPosition();
-                notifyItemChanged(lastIndex);
+                holder.itemView.post(() -> notifyItemChanged(lastIndex));
             }
             lastIndex = holder.getAdapterPosition();
         }

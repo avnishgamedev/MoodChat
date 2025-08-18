@@ -59,4 +59,13 @@ dependencies {
 
     // Circle ImageView
     implementation(libs.circleimageview)
+
+    // Firebase AI
+    implementation(libs.firebase.ai)
+
+    // Required for one-shot operations (to use `ListenableFuture` from Guava Android)
+    implementation(libs.guava)
+
+    // Required for streaming operations (to use `Publisher` from Reactive Streams)
+    implementation(libs.reactive.streams)
 }
