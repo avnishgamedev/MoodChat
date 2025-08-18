@@ -1,13 +1,18 @@
 package com.avnishgamedev.moodchat;
 
+import android.util.Log;
+
 import com.google.android.gms.tasks.Task;
+import com.google.android.gms.tasks.TaskCompletionSource;
 import com.google.android.gms.tasks.Tasks;
 import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.ListenerRegistration;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.SetOptions;
 import com.google.firebase.firestore.WriteBatch;
@@ -19,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 
 public class ConversationHelpers {
+    public static final String TAG = "ConversationHelpers";
 
     public static Task<Void> createConversation(
             String currentUsername,
@@ -88,6 +94,23 @@ public class ConversationHelpers {
             }
         });
     }
+
+    public static Task<ListenerRegistration> bindUserByUsername(String username, EventListener<DocumentSnapshot> userListener) {
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        TaskCompletionSource<ListenerRegistration> res = new TaskCompletionSource<>();
+
+        getUserByUsername(username)
+                .addOnSuccessListener(user -> {
+                    res.setResult(db.collection("users").document(user.getDocumentId()).addSnapshotListener(userListener));
+                })
+                .addOnFailureListener(e -> {
+                    Log.e(TAG, "bindUserByUsername: ", e);
+                    res.setException(e);
+                });
+
+        return res.getTask();
+    }
+
 
     public static String getOtherUsername(String conversationId, String currentUsername) {
         return conversationId.replace(currentUsername, "").replace("_", "");

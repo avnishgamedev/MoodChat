@@ -122,18 +122,32 @@ public class ConversationActivity extends AppCompatActivity {
     private void loadInitialData() {
         setLoading(true);
         thisUser = UserManager.getInstance().getUser();
-        ConversationHelpers.getUserByUsername(ConversationHelpers.getOtherUsername(conversation.getId(), thisUser.getUsername()))
-                .addOnSuccessListener(u -> {
-                    otherUser = u;
-                    adapter = new MessagesAdapter(messages, thisUser, otherUser);
-                    rvMessages.setAdapter(adapter);
+        ConversationHelpers.bindUserByUsername(ConversationHelpers.getOtherUsername(conversation.getId(), thisUser.getUsername()), (snap, e) -> {
+           if (e != null) {
+               Log.e(TAG, "Failed to load otherUser!", e);
+               Toast.makeText(this, "Failed to load otherUser!", Toast.LENGTH_SHORT).show();
+           }
+           if (snap == null) {
+               Log.w(TAG, "otherUser snapshot is null");
+               return;
+           }
+           setLoading(false);
+           otherUser = snap.toObject(User.class);
 
-                    tvChatName.setText(otherUser.getName());
-                    tvChatUsername.setText(otherUser.getUsername());
-                    ivProfilePic.setImageBitmap(base64ToBitmap(otherUser.getProfilePicture()));
-                    ivStatus.setImageResource(otherUser.isOnline() ? R.drawable.circle_online : R.drawable.circle_offline);
-                })
-                .addOnFailureListener(e -> Log.w(TAG, "Failed to load otherUser!", e));
+           if (adapter == null) {
+               initialiseAdapter();
+           }
+
+            tvChatName.setText(otherUser.getName());
+            tvChatUsername.setText(otherUser.getUsername());
+            ivProfilePic.setImageBitmap(base64ToBitmap(otherUser.getProfilePicture()));
+            ivStatus.setImageResource(otherUser.isOnline() ? R.drawable.circle_online : R.drawable.circle_offline);
+        });
+    }
+
+    private void initialiseAdapter() {
+        adapter = new MessagesAdapter(messages, thisUser, otherUser);
+        rvMessages.setAdapter(adapter);
 
         // First we load last 10 messages, then we start realtime listener
         ConversationHelpers.getMessagesQuery(conversation.getId()).limit(10).get()
@@ -182,6 +196,7 @@ public class ConversationActivity extends AppCompatActivity {
                     messages.add(newMessage);
 
                     adapter.notifyItemInserted(messages.size() - 1);
+                    rvMessages.scrollToPosition(messages.size() - 1);
 
                     if (newMessage.getSenderUsername().equals(ConversationHelpers.getOtherUsername(conversation.getId(), UserManager.getInstance().getUser().getUsername()))) {
                         ConversationHelpers.updateMessageStatus(conversation.getId(), newMessage.getId(), "read")
