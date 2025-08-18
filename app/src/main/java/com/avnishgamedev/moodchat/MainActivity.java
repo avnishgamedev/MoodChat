@@ -1,6 +1,7 @@
 package com.avnishgamedev.moodchat;
 
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.CancellationSignal;
@@ -12,6 +13,8 @@ import android.widget.Button;
 import android.widget.RelativeLayout;
 
 import androidx.activity.EdgeToEdge;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
@@ -77,6 +80,8 @@ public class MainActivity extends AppCompatActivity {
         setupToolbar();
         setupViews();
         startConversationsListener();
+
+        setupNotificationPermission();
     }
 
     @Override
@@ -118,6 +123,25 @@ public class MainActivity extends AppCompatActivity {
     protected void onDestroy() {
         stopConversationsListener();
         super.onDestroy();
+    }
+
+    private void setupNotificationPermission() {
+        ActivityResultLauncher<String> requestNotificationPermissionLauncher = registerForActivityResult(
+                new ActivityResultContracts.RequestPermission(),
+                isGranted -> {
+                    if (isGranted) {
+                        Log.d("MainActivity", "Notification permission granted");
+                    } else {
+                        Log.w("MainActivity", "Notification permission denied");
+                    }
+                }
+        );
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                requestNotificationPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS);
+            }
+        }
     }
 
     private void setupToolbar() {

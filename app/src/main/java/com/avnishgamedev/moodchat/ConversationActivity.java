@@ -210,7 +210,7 @@ public class ConversationActivity extends AppCompatActivity {
     private void startMessagesListener() {
         setLoading(true);
 
-        Query query = ConversationHelpers.getMessagesQuery(conversation.getId()).startAfter(conversation.getLastMessageTimestamp());
+        Query query = ConversationHelpers.getMessagesQuery(conversation.getId());
         messagesRegistration = query.addSnapshotListener((snap, e) -> {
             setLoading(false);
 
