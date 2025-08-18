@@ -22,6 +22,8 @@ import com.google.android.material.progressindicator.CircularProgressIndicator;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.firestore.DocumentChange;
 import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.EventListener;
+import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.ListenerRegistration;
 import com.google.firebase.firestore.Query;
 
@@ -72,6 +74,18 @@ public class ConversationActivity extends AppCompatActivity {
 
         setupViews();
         loadInitialData();
+
+        MainActivity.conversationsUpdated = new EventListener<Conversation>() {
+            @Override
+            public void onEvent(@Nullable Conversation value, @Nullable FirebaseFirestoreException error) {
+                if (value != null) {
+                    if (conversation.getId().equals(value.getId())) {
+                        conversation = value;
+                        setThemeFromData(conversation.getThemeData());
+                    }
+                }
+            }
+        };
     }
 
     @Override

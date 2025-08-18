@@ -34,6 +34,7 @@ import com.google.android.material.textfield.TextInputLayout;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.ListenerRegistration;
 import com.google.firebase.firestore.Query;
@@ -57,6 +58,7 @@ public class MainActivity extends AppCompatActivity {
     FirebaseFirestore db;
     List<Conversation> conversations;
     ListenerRegistration conversationsRegistration;
+    public static EventListener<Conversation> conversationsUpdated;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -148,6 +150,7 @@ public class MainActivity extends AppCompatActivity {
                     // e.g., whereArrayContains("members", user.getUid()) or deterministic IDs if you store a mirror
                     Query query = ConversationHelpers.getConversationsQuery(user.getUsername());
 
+                    if (conversationsRegistration != null) stopConversationsListener();
                     conversationsRegistration = query.addSnapshotListener((snap, e) -> {
                         setLoading(false);
 
@@ -166,6 +169,10 @@ public class MainActivity extends AppCompatActivity {
                             if (c != null) {
                                 c.setId(d.getId());
                                 fresh.add(c);
+
+                                if (conversationsUpdated != null) {
+                                    conversationsUpdated.onEvent(c, null);
+                                }
                             }
                         }
                         conversations.clear();
@@ -185,7 +192,6 @@ public class MainActivity extends AppCompatActivity {
             conversationsRegistration = null;
         }
     }
-
 
     private void startConversation() {
         promptUsername().addOnSuccessListener(user -> {

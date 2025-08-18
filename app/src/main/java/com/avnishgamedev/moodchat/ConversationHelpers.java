@@ -112,9 +112,27 @@ public class ConversationHelpers {
         return res.getTask();
     }
 
+    public static Task<ListenerRegistration> bindConversation(String conversationId, EventListener<DocumentSnapshot> conversationListener) {
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        TaskCompletionSource<ListenerRegistration> res = new TaskCompletionSource<>();
+
+        // Directly listen to the conversation document since we already have the ID
+        try {
+            ListenerRegistration registration = db.collection("conversations")
+                    .document(conversationId)
+                    .addSnapshotListener(conversationListener);
+            res.setResult(registration);
+        } catch (Exception e) {
+            Log.e(TAG, "bindConversation: ", e);
+            res.setException(e);
+        }
+
+        return res.getTask();
+    }
+
     public static Task<Void> updateConversation(String conversationId, Map<String, Object> data) {
         FirebaseFirestore db = FirebaseFirestore.getInstance();
-        return conversationRef(db, conversationId).update(data);
+        return conversationRef(db, conversationId).set(data, SetOptions.merge());
     }
 
     public static String getOtherUsername(String conversationId, String currentUsername) {
