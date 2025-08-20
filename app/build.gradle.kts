@@ -68,4 +68,7 @@ dependencies {
 
     // Required for streaming operations (to use `Publisher` from Reactive Streams)
     implementation(libs.reactive.streams)
+
+    // WebRTC
+    implementation("io.getstream:stream-webrtc-android:1.1.1")
 }

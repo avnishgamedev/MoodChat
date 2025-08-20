@@ -2,20 +2,30 @@ package com.avnishgamedev.moodchat;
 
 import static com.avnishgamedev.moodchat.MessagesAdapter.base64ToBitmap;
 
+import android.Manifest;
+import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
+import android.net.Uri;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.FrameLayout;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.progressindicator.CircularProgressIndicator;
@@ -23,6 +33,8 @@ import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.firestore.DocumentChange;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.EventListener;
+import com.google.firebase.firestore.FieldValue;
+import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.ListenerRegistration;
 import com.google.firebase.firestore.Query;
@@ -30,15 +42,17 @@ import com.google.firebase.firestore.Query;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.IntStream;
 
-public class ConversationActivity extends AppCompatActivity {
+public class ConversationActivity extends AppCompatActivity implements CallManager.CallListener {
     private static final String TAG = "ConversationActivity";
 
     // Views
     ConstraintLayout constraintLayout;
     View viewBackground;
     ImageView ivBack;
+    ImageButton btnVideoCall;
     ImageView ivProfilePic;
     TextView tvChatName;
     TextView tvChatUsername;
@@ -57,6 +71,17 @@ public class ConversationActivity extends AppCompatActivity {
     User thisUser;
     User otherUser;
 
+    // Call
+    private CallManager callManager;
+    // Required permissions for video calling
+    private String[] requiredPermissions = {
+            Manifest.permission.CAMERA,
+            Manifest.permission.RECORD_AUDIO,
+            Manifest.permission.MODIFY_AUDIO_SETTINGS
+    };
+    private static final int PERMISSION_REQUEST_CODE = 1000;
+    private AlertDialog incomingCallDialog = null;
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -74,6 +99,7 @@ public class ConversationActivity extends AppCompatActivity {
 
         setupViews();
         loadInitialData();
+        setupVideoCall();
 
         MainActivity.conversationsUpdated = new EventListener<Conversation>() {
             @Override
@@ -92,12 +118,36 @@ public class ConversationActivity extends AppCompatActivity {
     protected void onDestroy() {
         stopMessagesListener();
         super.onDestroy();
+
+        // Dismiss any active call dialog
+        if (incomingCallDialog != null && incomingCallDialog.isShowing()) {
+            incomingCallDialog.dismiss();
+            incomingCallDialog = null;
+        }
+
+        // Clean up call manager listener
+        if (callManager != null) {
+            callManager.setCallListener(null);
+        }
     }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+
+        // Dismiss dialog when leaving the activity
+        if (incomingCallDialog != null && incomingCallDialog.isShowing()) {
+            incomingCallDialog.dismiss();
+            incomingCallDialog = null;
+        }
+    }
+
 
     private void setupViews() {
         constraintLayout = findViewById(R.id.constraintLayout);
         viewBackground = findViewById(R.id.viewBackground);
         ivBack = findViewById(R.id.ivBack);
+        btnVideoCall = findViewById(R.id.btnVideoCall);
         ivProfilePic = findViewById(R.id.ivProfilePic);
         tvChatName = findViewById(R.id.tvChatName);
         tvChatUsername = findViewById(R.id.tvChatUsername);
@@ -110,7 +160,267 @@ public class ConversationActivity extends AppCompatActivity {
 
         ivBack.setOnClickListener(v -> finish());
         flSend.setOnClickListener(v -> sendMessage());
+        btnVideoCall.setOnClickListener(v -> initiateVideoCall());
     }
+
+    private void setupVideoCall() {
+        callManager = CallManager.getInstance(this);
+        callManager.setCallListener(this);
+        callManager.setCurrentUserId(thisUser.getUsername()); // Set your current user ID
+
+        // Clean up any old calls when opening chat
+        callManager.cleanupOldCalls();
+    }
+
+    private void initiateVideoCall() {
+        // Check permissions first
+        if (checkVideoCallPermissions()) {
+            startVideoCall();
+        } else {
+            requestPermissions();
+        }
+    }
+
+    private void startVideoCall() {
+        Intent intent = new Intent(this, VideoCallActivity.class);
+        intent.putExtra("target_user_id", otherUser.getUsername());
+        intent.putExtra("is_outgoing", true);
+        startActivity(intent);
+    }
+
+    private boolean checkVideoCallPermissions() {
+        for (String permission : requiredPermissions) {
+            if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private void requestPermissions() {
+        List<String> permissionsToRequest = new ArrayList<>();
+        List<String> permissionsNeedingRationale = new ArrayList<>();
+
+        // Check which permissions are missing and which need rationale
+        for (String permission : requiredPermissions) {
+            if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
+                permissionsToRequest.add(permission);
+
+                if (ActivityCompat.shouldShowRequestPermissionRationale(this, permission)) {
+                    permissionsNeedingRationale.add(permission);
+                }
+            }
+        }
+
+        // Show rationale dialog if needed
+        if (!permissionsNeedingRationale.isEmpty()) {
+            showPermissionRationaleDialog(permissionsToRequest);
+        } else {
+            // Request permissions directly
+            ActivityCompat.requestPermissions(
+                    this,
+                    permissionsToRequest.toArray(new String[0]),
+                    PERMISSION_REQUEST_CODE
+            );
+        }
+    }
+
+    private void showPermissionRationaleDialog(List<String> permissionsToRequest) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Permissions Required");
+        builder.setMessage("To make video calls, this app needs access to:\n\n" +
+                "• Camera: To show your video during calls\n" +
+                "• Microphone: To transmit your voice during calls\n" +
+                "• Audio Settings: To optimize call quality\n\n" +
+                "Please grant these permissions to continue.");
+
+        builder.setPositiveButton("Grant Permissions", (dialog, which) -> {
+            ActivityCompat.requestPermissions(
+                    this,
+                    permissionsToRequest.toArray(new String[0]),
+                    PERMISSION_REQUEST_CODE
+            );
+        });
+
+        builder.setNegativeButton("Cancel", (dialog, which) -> {
+            Toast.makeText(this, "Permissions are required for video calling", Toast.LENGTH_SHORT).show();
+        });
+
+        builder.setCancelable(false);
+        builder.show();
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        if (requestCode == PERMISSION_REQUEST_CODE) {
+            Map<String, Integer> permissionResults = new HashMap<>();
+
+            // Store results in a map for easier processing
+            for (int i = 0; i < permissions.length; i++) {
+                permissionResults.put(permissions[i], grantResults[i]);
+            }
+
+            // Check if all permissions were granted
+            boolean allPermissionsGranted = true;
+            List<String> deniedPermissions = new ArrayList<>();
+            List<String> permanentlyDeniedPermissions = new ArrayList<>();
+
+            for (String permission : requiredPermissions) {
+                Integer result = permissionResults.get(permission);
+                if (result == null || result != PackageManager.PERMISSION_GRANTED) {
+                    allPermissionsGranted = false;
+                    deniedPermissions.add(permission);
+
+                    // Check if permission was permanently denied
+                    if (!ActivityCompat.shouldShowRequestPermissionRationale(this, permission)) {
+                        permanentlyDeniedPermissions.add(permission);
+                    }
+                }
+            }
+
+            if (allPermissionsGranted) {
+                // All permissions granted - start video call
+                startVideoCall();
+            } else {
+                // Handle denied permissions
+                handleDeniedPermissions(deniedPermissions, permanentlyDeniedPermissions);
+            }
+        }
+    }
+
+    private void handleDeniedPermissions(List<String> deniedPermissions, List<String> permanentlyDeniedPermissions) {
+        if (!permanentlyDeniedPermissions.isEmpty()) {
+            // Some permissions were permanently denied - show settings dialog
+            showPermissionSettingsDialog();
+        } else {
+            // Permissions were just denied this time - show retry option
+            showPermissionDeniedDialog();
+        }
+    }
+
+    /**
+     * Show dialog for permanently denied permissions - redirect to settings
+     */
+    private void showPermissionSettingsDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Permissions Required");
+        builder.setMessage("Video calling requires camera and microphone permissions. " +
+                "Please enable them in the app settings to continue.\n\n" +
+                "Go to Settings > Apps > " + getString(R.string.app_name) + " > Permissions");
+
+        builder.setPositiveButton("Open Settings", (dialog, which) -> {
+            Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+            Uri uri = Uri.fromParts("package", getPackageName(), null);
+            intent.setData(uri);
+            startActivity(intent);
+        });
+
+        builder.setNegativeButton("Cancel", (dialog, which) -> {
+            Toast.makeText(this, "Video calling is not available without permissions", Toast.LENGTH_SHORT).show();
+        });
+
+        builder.show();
+    }
+
+    private void showPermissionDeniedDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Permissions Denied");
+        builder.setMessage("Camera and microphone access are required for video calls. " +
+                "Would you like to grant these permissions now?");
+
+        builder.setPositiveButton("Try Again", (dialog, which) -> {
+            requestPermissions();
+        });
+
+        builder.setNegativeButton("Cancel", (dialog, which) -> {
+            Toast.makeText(this, "Permissions are required for video calling", Toast.LENGTH_SHORT).show();
+        });
+
+        builder.show();
+    }
+
+    // CallManager.CallListener implementations
+    @Override
+    public void onIncomingCall(String callerName, String callId) {
+        runOnUiThread(() -> {
+            // Dismiss any existing dialog first
+            if (incomingCallDialog != null && incomingCallDialog.isShowing()) {
+                incomingCallDialog.dismiss();
+            }
+
+            // Check permissions before showing dialog
+            if (checkVideoCallPermissions()) {
+                showIncomingCallDialog(callerName, callId);
+            } else {
+                // Auto-decline if permissions not available
+                declineCall(callId);
+                Toast.makeText(this, "Cannot accept call - permissions required", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void showIncomingCallDialog(String callerName, String callId) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Incoming Video Call");
+        builder.setMessage(callerName + " is calling you...");
+
+        builder.setPositiveButton("Answer", (dialog, which) -> {
+            Intent intent = new Intent(this, VideoCallActivity.class);
+            intent.putExtra("call_id", callId);
+            intent.putExtra("is_incoming", true);
+            startActivity(intent);
+            incomingCallDialog = null;
+        });
+
+        builder.setNegativeButton("Decline", (dialog, which) -> {
+            declineCall(callId);
+            incomingCallDialog = null;
+        });
+
+        builder.setOnDismissListener(dialog -> {
+            incomingCallDialog = null;
+        });
+
+        builder.setCancelable(false);
+        incomingCallDialog = builder.create();
+        incomingCallDialog.show();
+    }
+
+    private void declineCall(String callId) {
+        // Update call status to declined in Firestore
+        Map<String, Object> declineData = new HashMap<>();
+        declineData.put("status", "declined");
+        declineData.put("declinedBy", thisUser.getUsername());
+        declineData.put("declinedAt", FieldValue.serverTimestamp());
+
+        FirebaseFirestore.getInstance().collection("calls").document(callId)
+                .update(declineData)
+                .addOnSuccessListener(aVoid -> {
+                    Log.d("ChatActivity", "Call declined successfully");
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("ChatActivity", "Failed to decline call", e);
+                });
+    }
+
+
+    @Override
+    public void onCallConnected() {}
+
+    @Override
+    public void onCallEnded() {}
+
+    @Override
+    public void onCallFailed(String error) {
+        runOnUiThread(() -> {
+            Toast.makeText(this, "Call failed: " + error, Toast.LENGTH_SHORT).show();
+        });
+    }
+
+    @Override
+    public void onRemoteStreamReceived() {}
 
     private void sendMessage() {
         String text = etMessage.getText().toString();
