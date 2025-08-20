@@ -2,6 +2,7 @@ package com.avnishgamedev.moodchat;
 
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Rect;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.CancellationSignal;
@@ -10,6 +11,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 
 import androidx.activity.EdgeToEdge;
@@ -21,8 +23,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
-import androidx.credentials.CredentialManager;
 import androidx.credentials.ClearCredentialStateRequest;
+import androidx.credentials.CredentialManager;
 import androidx.credentials.CredentialManagerCallback;
 import androidx.credentials.exceptions.ClearCredentialException;
 import androidx.recyclerview.widget.RecyclerView;
@@ -162,7 +164,41 @@ public class MainActivity extends AppCompatActivity {
         });
         rvConversations.setAdapter(adapter);
 
+        // Add item decorator for spacing
+        rvConversations.addItemDecoration(new RecyclerView.ItemDecoration() {
+            @Override
+            public void getItemOffsets(@NonNull Rect outRect, @NonNull View view,
+                                       @NonNull RecyclerView parent, @NonNull RecyclerView.State state) {
+                outRect.bottom = 8;
+                if (parent.getChildAdapterPosition(view) == 0) {
+                    outRect.top = 8;
+                }
+            }
+        });
+
         rlLoading = findViewById(R.id.rlLoading);
+        setupEmptyState();
+    }
+
+    private void setupEmptyState() {
+        LinearLayout emptyStateContainer = findViewById(R.id.emptyStateContainer);
+
+        // Show/hide empty state based on conversations
+        if (conversations.isEmpty()) {
+            emptyStateContainer.setVisibility(View.VISIBLE);
+            rvConversations.setVisibility(View.GONE);
+        } else {
+            emptyStateContainer.setVisibility(View.GONE);
+            rvConversations.setVisibility(View.VISIBLE);
+        }
+    }
+
+    private void updateConversationsList(List<Conversation> fresh) {
+        conversations.clear();
+        conversations.addAll(fresh);
+        adapter.notifyDataSetChanged();
+        setupEmptyState();
+        Log.d(TAG, "Conversations updated (full): " + conversations.size());
     }
 
     private void startConversationsListener() {
@@ -199,9 +235,7 @@ public class MainActivity extends AppCompatActivity {
                                 }
                             }
                         }
-                        conversations.clear();
-                        conversations.addAll(fresh);
-                        adapter.notifyDataSetChanged();
+                        updateConversationsList(fresh);
                         Log.d(TAG, "Conversations updated (full): " + conversations.size());
                     });
                 })

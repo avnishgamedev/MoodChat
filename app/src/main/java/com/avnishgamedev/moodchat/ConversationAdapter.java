@@ -24,6 +24,8 @@ public class ConversationAdapter extends RecyclerView.Adapter<ConversationAdapte
         TextView tvName;
         TextView tvLastMessage;
         TextView tvLastMessageTime;
+        ImageView ivMessageStatus;
+        View onlineIndicator;
         RelativeLayout rlLoading;
         public ViewHolder(View itemView) {
             super(itemView);
@@ -32,6 +34,8 @@ public class ConversationAdapter extends RecyclerView.Adapter<ConversationAdapte
             tvName = itemView.findViewById(R.id.tvName);
             tvLastMessage = itemView.findViewById(R.id.tvLastMessage);
             tvLastMessageTime = itemView.findViewById(R.id.tvLastMessageTime);
+            ivMessageStatus = itemView.findViewById(R.id.ivMessageStatus);
+            onlineIndicator = itemView.findViewById(R.id.onlineIndicator);
             rlLoading = itemView.findViewById(R.id.rlLoading);
         }
     }
@@ -56,12 +60,17 @@ public class ConversationAdapter extends RecyclerView.Adapter<ConversationAdapte
         holder.itemView.setOnClickListener(v -> listener.onItemClick(null, v, position, 0));
 
         holder.rlLoading.setVisibility(View.VISIBLE);
+        holder.onlineIndicator.setVisibility(View.GONE);
         ConversationHelpers.getUserByUsername(ConversationHelpers.getOtherUsername(conversation.getId(), UserManager.getInstance().getUser().getUsername()))
                 .addOnSuccessListener(user -> {
                     holder.tvName.setText(user.getName());
                     holder.tvLastMessage.setText(conversation.getLastMessage());
                     holder.tvLastMessageTime.setText(new SimpleDateFormat("hh:mm a", Locale.getDefault()).format(conversation.getLastMessageTimestamp()));
                     holder.ivProfilePic.setImageBitmap(base64ToBitmap(user.getProfilePicture()));
+
+                     if (user.isOnline()) {
+                         holder.onlineIndicator.setVisibility(View.VISIBLE);
+                     }
                 })
                 .addOnFailureListener(e -> {
                     holder.tvName.setText("Unknown");
