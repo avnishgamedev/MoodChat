@@ -12,7 +12,7 @@
         android:animateLayoutChanges="true"
         android:background="@color/material_dynamic_primary20">
 
-        <!-- Header Section -->
+        <!-- Enhanced Header Section with Gradient Overlay -->
         <View
             android:id="@+id/viewBackground"
             android:layout_width="match_parent"
@@ -22,14 +22,25 @@
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toTopOf="@id/inputContainer" />
 
-        <!-- Your existing header views (ivBack, ivInfo, tvChatName) -->
+        <!-- Subtle gradient overlay for depth -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="80dp"
+            android:background="@drawable/chat_header_gradient_overlay"
+            android:alpha="1.0"
+            app:layout_constraintTop_toTopOf="parent" />
+
         <ImageView
             android:id="@+id/ivBack"
-            android:layout_width="30dp"
-            android:layout_height="30dp"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
             android:layout_marginStart="16dp"
             android:layout_marginTop="12dp"
+            android:padding="10dp"
             android:src="@drawable/ic_back"
+            android:background="@drawable/rounded_button_background"
+            android:foreground="?attr/selectableItemBackgroundBorderless"
+            android:elevation="2dp"
             app:tint="@color/material_dynamic_secondary50"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
@@ -38,67 +49,96 @@
             android:id="@+id/btnVideoCall"
             android:layout_width="40dp"
             android:layout_height="40dp"
+            android:padding="8dp"
             android:src="@drawable/ic_videocam"
+            android:layout_marginEnd="4dp"
             android:background="?attr/selectableItemBackgroundBorderless"
-            android:layout_marginEnd="12dp"
-            app:layout_constraintEnd_toStartOf="@id/flProfilePic"
-            app:layout_constraintTop_toTopOf="parent"
-            android:layout_marginTop="8dp" />
+            app:tint="@color/material_dynamic_secondary50"
+            app:layout_constraintEnd_toEndOf="@id/flProfilePic"
+            app:layout_constraintTop_toBottomOf="@id/flProfilePic" />
 
+        <!-- Enhanced Profile Picture with Status -->
         <FrameLayout
             android:id="@+id/flProfilePic"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginEnd="16dp"
-            android:layout_marginTop="12dp"
+            android:layout_marginTop="8dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent">
 
-            <de.hdodenhof.circleimageview.CircleImageView
-                android:id="@+id/ivProfilePic"
-                android:layout_width="30dp"
-                android:layout_height="30dp"
-                android:src="@drawable/ic_person"
-                app:tint="@color/material_dynamic_secondary50"
-                />
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="22dp"
+                app:cardElevation="3dp"
+                app:cardBackgroundColor="?attr/colorSurface">
+
+                <de.hdodenhof.circleimageview.CircleImageView
+                    android:id="@+id/ivProfilePic"
+                    android:layout_width="44dp"
+                    android:layout_height="44dp"
+                    android:layout_margin="2dp"
+                    android:src="@drawable/ic_person"
+                    app:tint="@color/material_dynamic_secondary50"
+                    app:civ_border_width="2dp"
+                    app:civ_border_color="?attr/colorPrimary" />
+
+            </com.google.android.material.card.MaterialCardView>
 
             <ImageView
                 android:id="@+id/ivStatus"
-                android:layout_width="8dp"
-                android:layout_height="8dp"
-                android:src="@drawable/circle_offline"
-                android:layout_gravity="bottom|end" />
+                android:layout_width="12dp"
+                android:layout_height="12dp"
+                android:layout_gravity="end|bottom"
+                android:src="@drawable/circle_offline" />
 
         </FrameLayout>
 
-        <TextView
-            android:id="@+id/tvChatName"
+        <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:layout_marginHorizontal="20dp"
-            android:text="Chat Name"
+            android:layout_marginTop="12dp"
+            android:layout_marginHorizontal="16dp"
+            android:background="@drawable/glass_background"
+            android:orientation="vertical"
             android:gravity="center"
-            android:textColor="@color/black"
-            android:textStyle="bold"
+            android:paddingVertical="8dp"
+            android:paddingHorizontal="12dp"
+            android:elevation="2dp"
             app:layout_constraintEnd_toStartOf="@id/flProfilePic"
             app:layout_constraintStart_toEndOf="@+id/ivBack"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="parent">
 
-        <TextView
-            android:id="@+id/tvChatUsername"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="2dp"
-            android:layout_marginHorizontal="20dp"
-            android:text="chat_username"
-            android:textSize="10sp"
-            android:gravity="center"
-            android:textColor="@color/black"
-            app:layout_constraintEnd_toStartOf="@id/flProfilePic"
-            app:layout_constraintStart_toEndOf="@+id/ivBack"
-            app:layout_constraintTop_toBottomOf="@id/tvChatName" />
+            <TextView
+                android:id="@+id/tvChatName"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Chat Name"
+                android:gravity="center"
+                android:textColor="@color/black"
+                android:textStyle="bold"
+                android:textSize="16sp"
+                android:ellipsize="end"
+                android:maxLines="1" />
 
+            <TextView
+                android:id="@+id/tvChatUsername"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="chat_username"
+                android:textSize="12sp"
+                android:gravity="center"
+                android:textColor="@color/black"
+                android:alpha="0.8"
+                android:ellipsize="end"
+                android:maxLines="1" />
+
+        </LinearLayout>
+
+
+        <!-- Enhanced Messages RecyclerView -->
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rvMessages"
             android:layout_width="match_parent"
@@ -107,68 +147,90 @@
             android:orientation="vertical"
             android:overScrollMode="never"
             android:padding="20dp"
+            android:scrollbars="vertical"
+            android:fadeScrollbars="true"
             android:visibility="gone"
             app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
             app:layout_constraintBottom_toBottomOf="@id/viewBackground"
             app:layout_constraintTop_toBottomOf="@id/ivBack" />
 
-        <com.google.android.material.progressindicator.CircularProgressIndicator
-            android:id="@+id/progressIndicator"
-            android:layout_width="25dp"
-            android:layout_height="25dp"
-            android:indeterminate="true"
+        <!-- Enhanced Loading Indicator -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:cardCornerRadius="24dp"
+            app:cardElevation="4dp"
+            app:cardBackgroundColor="#40FFFFFF"
             app:layout_constraintBottom_toTopOf="@id/inputContainer"
             app:layout_constraintEnd_toEndOf="@id/viewBackground"
             app:layout_constraintStart_toStartOf="@id/viewBackground"
-            app:layout_constraintTop_toTopOf="@id/viewBackground" />
+            app:layout_constraintTop_toTopOf="@id/viewBackground">
 
-        <!-- Input Container (Grouped together) -->
-        <LinearLayout
+            <com.google.android.material.progressindicator.CircularProgressIndicator
+                android:id="@+id/progressIndicator"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_margin="16dp"
+                android:indeterminate="true"
+                app:indicatorColor="?attr/colorPrimary"
+                app:trackColor="?attr/colorSurfaceVariant" />
+
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Enhanced Input Container with Glass Morphism -->
+        <com.google.android.material.card.MaterialCardView
             android:id="@+id/inputContainer"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:padding="12dp"
-            android:gravity="center_vertical"
+            android:layout_margin="12dp"
+            app:cardCornerRadius="28dp"
+            app:cardElevation="6dp"
+            app:cardBackgroundColor="#80FFFFFF"
+            app:strokeWidth="0dp"
+            app:strokeColor="@android:color/transparent"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent">
 
-            <EditText
-                android:id="@+id/etMessage"
-                android:layout_width="0dp"
-                android:layout_height="40dp"
-                android:layout_weight="1"
-                android:layout_marginEnd="8dp"
-                android:background="@drawable/background_chat_input"
-                android:hint="Enter message"
-                android:imeOptions="actionSend"
-                android:textColor="#FFFFFF"
-                android:importantForAutofill="no"
-                android:inputType="text"
-                android:paddingStart="16dp"
-                android:paddingEnd="16dp"
-                android:textColorHint="@color/material_dynamic_secondary50" />
+        <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:padding="8dp"
+                android:gravity="center_vertical">
 
-            <FrameLayout
-                android:id="@+id/flSend"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:background="@drawable/background_chat_input"
-                android:backgroundTint="@null">
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etMessage"
+                    android:layout_width="0dp"
+                    android:layout_height="48dp"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="8dp"
+                    android:background="@drawable/background_chat_input"
+                    android:hint="Enter message"
+                    android:imeOptions="actionSend"
+                    android:textColor="#FFFFFF"
+                    android:importantForAutofill="no"
+                    android:inputType="text|textCapSentences|textMultiLine"
+                    android:paddingStart="20dp"
+                    android:paddingEnd="20dp"
+                    android:textColorHint="@color/material_dynamic_secondary50"
+                    android:textSize="16sp"
+                    android:maxLines="3" />
 
-                <ImageView
-                    android:id="@+id/ivIcSend"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
+                <com.google.android.material.floatingactionbutton.FloatingActionButton
+                    android:id="@+id/flSend"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
                     android:src="@drawable/ic_send"
-                    android:layout_marginStart="4dp"
-                    android:padding="8dp"
-                    app:tint="@color/white" />
+                    app:fabSize="mini"
+                    app:backgroundTint="?attr/colorPrimary"
+                    app:tint="@color/white"
+                    app:elevation="4dp"
+                    android:contentDescription="Send message" />
 
-            </FrameLayout>
+            </LinearLayout>
 
-        </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

@@ -13,7 +13,6 @@ import android.provider.Settings;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
-import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -28,6 +27,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.progressindicator.CircularProgressIndicator;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.firestore.DocumentChange;
@@ -60,8 +60,7 @@ public class ConversationActivity extends AppCompatActivity implements CallManag
     RecyclerView rvMessages;
     MessagesAdapter adapter;
     EditText etMessage;
-    FrameLayout flSend;
-    ImageView ivIcSend;
+    FloatingActionButton flSend;
     CircularProgressIndicator progressIndicator;
 
     // Meta data
@@ -155,7 +154,6 @@ public class ConversationActivity extends AppCompatActivity implements CallManag
         rvMessages = findViewById(R.id.rvMessages);
         etMessage = findViewById(R.id.etMessage);
         flSend = findViewById(R.id.flSend);
-        ivIcSend = findViewById(R.id.ivIcSend);
         progressIndicator = findViewById(R.id.progressIndicator);
 
         ivBack.setOnClickListener(v -> finish());
@@ -584,12 +582,18 @@ public class ConversationActivity extends AppCompatActivity implements CallManag
         if (data != null) {
             viewBackground.setBackgroundColor(Color.parseColor(data.getBackground()));
             constraintLayout.setBackgroundColor(Color.parseColor(data.getSurrounding()));
+
+            // For TextInputEditText instead of EditText
             etMessage.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor(data.getMessageBackground())));
             etMessage.setTextColor(Color.parseColor(data.getMessageTextColour()));
+
+            // For FloatingActionButton instead of FrameLayout
             flSend.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor(data.getSendBackground())));
-            ivIcSend.setImageTintList(ColorStateList.valueOf(Color.parseColor(data.getSendIconTint())));
+            flSend.setImageTintList(ColorStateList.valueOf(Color.parseColor(data.getSendIconTint())));
+
             if (adapter != null)
                 adapter.setBubbleColours(data.getSentBubbleColour(), data.getReceivedBubbleColour(), data.getSentTextColour(), data.getReceivedTextColour());
         }
     }
+
 }
