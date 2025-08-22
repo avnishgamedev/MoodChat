@@ -11,8 +11,8 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.FrameLayout;
 import android.widget.LinearLayout;
-import android.widget.RelativeLayout;
 
 import androidx.activity.EdgeToEdge;
 import androidx.activity.result.ActivityResultLauncher;
@@ -32,7 +32,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.gms.tasks.Task;
 import com.google.android.gms.tasks.TaskCompletionSource;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
@@ -53,10 +53,10 @@ public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
 
     // Views
-    FloatingActionButton fab;
+    ExtendedFloatingActionButton fab;
     RecyclerView rvConversations;
     ConversationAdapter adapter;
-    RelativeLayout rlLoading;
+    FrameLayout flLoading;
 
     // Meta data
     FirebaseAuth auth;
@@ -176,7 +176,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        rlLoading = findViewById(R.id.rlLoading);
+        flLoading = findViewById(R.id.flLoading);
         setupEmptyState();
     }
 
@@ -368,6 +368,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setLoading(boolean status) {
-        rlLoading.setVisibility(status ? View.VISIBLE : View.GONE);
+        flLoading.setVisibility(status ? View.VISIBLE : View.GONE);
     }
 }

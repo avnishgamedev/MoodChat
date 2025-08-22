@@ -4,56 +4,83 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginHorizontal="8dp"
-    android:layout_marginVertical="4dp"
-    app:cardElevation="2dp"
-    app:cardCornerRadius="12dp"
-    app:cardBackgroundColor="?attr/colorSurfaceContainer"
-    android:foreground="?attr/selectableItemBackground">
+    android:layout_marginHorizontal="12dp"
+    android:layout_marginVertical="6dp"
+    app:cardElevation="3dp"
+    app:cardCornerRadius="16dp"
+    app:cardBackgroundColor="?attr/colorSurface"
+    android:foreground="?attr/selectableItemBackground"
+    app:strokeWidth="1dp"
+    app:strokeColor="?attr/colorOutlineVariant">
 
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
+        <!-- Subtle gradient overlay -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/conversation_item_gradient"
+            android:alpha="0.3" />
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:padding="16dp"
+            android:padding="20dp"
             android:gravity="center_vertical">
 
-            <!-- Profile Picture with Online Indicator -->
+            <!-- Enhanced Profile Picture with Online Indicator -->
             <FrameLayout
-                android:layout_width="56dp"
-                android:layout_height="56dp">
+                android:layout_width="64dp"
+                android:layout_height="64dp">
 
-                <de.hdodenhof.circleimageview.CircleImageView
-                    android:id="@+id/ivProfilePic"
-                    android:layout_width="56dp"
-                    android:layout_height="56dp"
-                    android:src="@drawable/ic_person"
-                    app:civ_border_width="2dp"
-                    app:civ_border_color="?attr/colorPrimary" />
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="60dp"
+                    android:layout_height="60dp"
+                    android:layout_gravity="center"
+                    app:cardCornerRadius="30dp"
+                    app:cardElevation="2dp">
 
-                <!-- Online Status Indicator -->
-                <View
+                    <de.hdodenhof.circleimageview.CircleImageView
+                        android:id="@+id/ivProfilePic"
+                        android:layout_width="60dp"
+                        android:layout_height="60dp"
+                        android:src="@drawable/ic_person"
+                        app:civ_border_width="3dp"
+                        app:civ_border_color="?attr/colorPrimary" />
+
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- Enhanced Online Status Indicator -->
+                <com.google.android.material.card.MaterialCardView
                     android:id="@+id/onlineIndicator"
-                    android:layout_width="14dp"
-                    android:layout_height="14dp"
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
                     android:layout_gravity="bottom|end"
-                    android:layout_marginBottom="4dp"
-                    android:layout_marginEnd="4dp"
-                    android:background="@drawable/circle_online_indicator"
-                    android:visibility="gone" />
+                    android:layout_marginBottom="2dp"
+                    android:layout_marginEnd="2dp"
+                    app:cardCornerRadius="9dp"
+                    app:cardBackgroundColor="#4CAF50"
+                    app:cardElevation="4dp"
+                    android:visibility="gone">
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="@drawable/online_indicator_pulse" />
+
+                </com.google.android.material.card.MaterialCardView>
 
             </FrameLayout>
 
-            <!-- Message Content -->
+            <!-- Enhanced Message Content -->
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:layout_marginStart="16dp"
+                android:layout_marginStart="20dp"
                 android:orientation="vertical">
 
                 <!-- Name and Time Row -->
@@ -61,7 +88,8 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:gravity="center_vertical">
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="6dp">
 
                     <TextView
                         android:id="@+id/tvName"
@@ -69,20 +97,30 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="Contact Name"
-                        android:textSize="16sp"
-                        android:textStyle="bold"
+                        android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
                         android:textColor="?attr/colorOnSurface"
                         android:ellipsize="end"
                         android:maxLines="1" />
 
-                    <TextView
-                        android:id="@+id/tvLastMessageTime"
+                    <com.google.android.material.card.MaterialCardView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="12:30 PM"
-                        android:textSize="12sp"
-                        android:textColor="?attr/colorOnSurfaceVariant"
-                        android:layout_marginStart="8dp" />
+                        app:cardCornerRadius="12dp"
+                        app:cardBackgroundColor="?attr/colorPrimaryContainer"
+                        app:cardElevation="1dp"
+                        android:layout_marginStart="12dp">
+
+                        <TextView
+                            android:id="@+id/tvLastMessageTime"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="12:30 PM"
+                            android:textAppearance="@style/TextAppearance.Material3.LabelSmall"
+                            android:textColor="?attr/colorOnPrimaryContainer"
+                            android:paddingHorizontal="8dp"
+                            android:paddingVertical="4dp" />
+
+                    </com.google.android.material.card.MaterialCardView>
 
                 </LinearLayout>
 
@@ -91,8 +129,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:gravity="center_vertical"
-                    android:layout_marginTop="4dp">
+                    android:gravity="center_vertical">
 
                     <TextView
                         android:id="@+id/tvLastMessage"
@@ -100,20 +137,31 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="Last message preview..."
-                        android:textSize="14sp"
+                        android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
                         android:textColor="?attr/colorOnSurfaceVariant"
                         android:ellipsize="end"
-                        android:maxLines="1" />
+                        android:maxLines="2"
+                        android:lineSpacingMultiplier="1.2" />
 
-                    <!-- Message Status Icons -->
-                    <ImageView
-                        android:id="@+id/ivMessageStatus"
-                        android:layout_width="16dp"
-                        android:layout_height="16dp"
-                        android:src="@drawable/ic_check"
-                        android:visibility="gone"
-                        app:tint="?attr/colorPrimary"
-                        android:layout_marginStart="8dp" />
+                    <!-- Enhanced Message Status Icons -->
+                    <com.google.android.material.card.MaterialCardView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        app:cardCornerRadius="12dp"
+                        app:cardBackgroundColor="?attr/colorSecondaryContainer"
+                        app:cardElevation="2dp"
+                        android:layout_marginStart="12dp">
+
+                        <ImageView
+                            android:id="@+id/ivMessageStatus"
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:src="@drawable/ic_check"
+                            android:visibility="gone"
+                            app:tint="?attr/colorOnSecondaryContainer"
+                            android:padding="2dp" />
+
+                    </com.google.android.material.card.MaterialCardView>
 
                 </LinearLayout>
 
@@ -121,24 +169,35 @@
 
         </LinearLayout>
 
-        <!-- Enhanced Loading State -->
-        <RelativeLayout
+        <!-- Enhanced Loading Overlay -->
+        <com.google.android.material.card.MaterialCardView
             android:id="@+id/rlLoading"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="?attr/colorSurfaceContainer"
-            android:alpha="0.9"
+            app:cardCornerRadius="16dp"
+            app:cardBackgroundColor="?attr/colorSurface"
+            app:cardElevation="0dp"
+            android:alpha="0.95"
             android:visibility="gone">
 
-            <com.google.android.material.progressindicator.CircularProgressIndicator
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:layout_centerInParent="true"
-                android:indeterminate="true"
-                app:indicatorSize="24dp"
-                app:indicatorColor="?attr/colorPrimary" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:background="@drawable/loading_shimmer_background">
 
-        </RelativeLayout>
+                <com.google.android.material.progressindicator.CircularProgressIndicator
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
+                    android:indeterminate="true"
+                    app:indicatorSize="28dp"
+                    app:indicatorColor="?attr/colorPrimary"
+                    app:trackColor="?attr/colorSurfaceVariant"
+                    app:trackThickness="3dp" />
+
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
 
     </FrameLayout>
 
