@@ -3,27 +3,28 @@ package com.avnishgamedev.moodchat;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
 import android.media.ThumbnailUtils;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.text.InputType;
+import android.util.Base64;
 import android.util.Log;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.PickVisualMediaRequest;
 import androidx.activity.result.contract.ActivityResultContracts;
-import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.widget.Toolbar;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 
 import com.google.android.gms.tasks.Task;
 import com.google.android.gms.tasks.TaskCompletionSource;
@@ -40,14 +41,8 @@ import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.text.SimpleDateFormat;
-import java.util.HashMap;
 import java.util.Locale;
-
-import android.util.Base64;
-import android.widget.TextView;
-import android.widget.Toast;
 
 public class ProfileActivity extends AppCompatActivity {
     private static final String TAG = "ProfileActivity";
@@ -137,7 +132,7 @@ public class ProfileActivity extends AppCompatActivity {
         String base64ProfilePicture = u.getProfilePicture();
         if (base64ProfilePicture != null)
             ivProfilePic.setImageBitmap(base64ToBitmap(base64ProfilePicture));
-        tvRegisteredOn.setText(new SimpleDateFormat("dd MMMM yyyy 'at' hh:mm a", Locale.getDefault()).format(u.getRegisteredOn().toDate()));
+        tvRegisteredOn.setText(new SimpleDateFormat("dd MMMM yyyy hh:mm a", Locale.getDefault()).format(u.getRegisteredOn().toDate()));
     }
 
     private void showImagePicker() {
