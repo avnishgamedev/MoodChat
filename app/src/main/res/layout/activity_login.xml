@@ -182,7 +182,7 @@
     </LinearLayout>
 
     <RelativeLayout
-        android:id="@+id/rlLoading"
+        android:id="@+id/llLoading"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="@drawable/login_loading_overlay_background"

@@ -6,7 +6,7 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/main_background"
+    android:background="@drawable/gradient_background"
     tools:context=".MainActivity">
 
     <com.google.android.material.appbar.AppBarLayout
@@ -14,8 +14,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@drawable/header_gradient_background"
-        android:elevation="8dp"
-        app:elevation="8dp">
+        android:elevation="12dp"
+        app:elevation="12dp">
 
         <com.google.android.material.appbar.MaterialToolbar
             android:id="@+id/materialToolbar"
@@ -37,7 +37,7 @@
         android:orientation="vertical"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-        <!-- Empty State Container -->
+        <!-- Enhanced Empty State Container -->
         <LinearLayout
             android:id="@+id/emptyStateContainer"
             android:layout_width="match_parent"
@@ -45,50 +45,43 @@
             android:orientation="vertical"
             android:gravity="center"
             android:padding="40dp"
-            android:background="@drawable/empty_state_background"
             android:visibility="gone">
 
-            <com.google.android.material.card.MaterialCardView
+            <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                app:cardCornerRadius="24dp"
-                app:cardElevation="4dp"
-                app:cardBackgroundColor="?attr/colorSurface">
+                android:orientation="vertical"
+                android:gravity="center"
+                android:background="@drawable/form_card_background"
+                android:elevation="8dp"
+                android:padding="32dp">
 
-                <LinearLayout
+                <ImageView
+                    android:layout_width="80dp"
+                    android:layout_height="80dp"
+                    android:src="@drawable/ic_chat_empty"
+                    app:tint="#8080FF"
+                    android:layout_marginBottom="16dp" />
+
+                <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:gravity="center"
-                    android:padding="32dp">
+                    android:text="Ready to chat?"
+                    android:textSize="24sp"
+                    android:textStyle="bold"
+                    android:textColor="#FFFFFF"
+                    android:layout_marginBottom="8dp" />
 
-                    <ImageView
-                        android:layout_width="80dp"
-                        android:layout_height="80dp"
-                        android:src="@drawable/ic_chat_empty"
-                        app:tint="?attr/colorPrimary"
-                        android:layout_marginBottom="16dp" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Start your first conversation\nby tapping the + button"
+                    android:textSize="16sp"
+                    android:textColor="#CCFFFFFF"
+                    android:textAlignment="center"
+                    android:lineSpacingExtra="4dp" />
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Ready to chat?"
-                        android:textAppearance="@style/TextAppearance.Material3.HeadlineSmall"
-                        android:textColor="?attr/colorOnSurface"
-                        android:layout_marginBottom="8dp" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Start your first conversation\nby tapping the + button"
-                        android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
-                        android:textColor="?attr/colorOnSurfaceVariant"
-                        android:textAlignment="center"
-                        android:lineSpacingMultiplier="1.2" />
-
-                </LinearLayout>
-
-            </com.google.android.material.card.MaterialCardView>
+            </LinearLayout>
 
         </LinearLayout>
 
@@ -122,7 +115,7 @@
         app:iconSize="24dp"
         android:contentDescription="Start new conversation"
         app:layout_behavior="com.google.android.material.behavior.HideBottomViewOnScrollBehavior"
-        app:backgroundTint="?attr/colorPrimary"
+        app:backgroundTint="#8080FF"
         app:elevation="8dp"
         app:hoveredFocusedTranslationZ="12dp"
         app:cornerRadius="28dp" />
@@ -138,41 +131,34 @@
         android:focusable="true"
         android:elevation="10dp">
 
-        <com.google.android.material.card.MaterialCardView
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            app:cardCornerRadius="20dp"
-            app:cardElevation="12dp"
-            app:cardBackgroundColor="?attr/colorSurface">
+            android:orientation="vertical"
+            android:gravity="center"
+            android:background="@drawable/form_card_background"
+            android:elevation="12dp"
+            android:padding="40dp">
 
-            <LinearLayout
+            <com.google.android.material.progressindicator.CircularProgressIndicator
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:indeterminate="true"
+                app:indicatorColor="#8080FF"
+                app:trackColor="#338080FF"
+                app:indicatorSize="56dp"
+                app:trackThickness="4dp" />
+
+            <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:gravity="center"
-                android:padding="40dp">
+                android:text="Loading conversations..."
+                android:textSize="18sp"
+                android:textColor="#FFFFFF"
+                android:layout_marginTop="20dp" />
 
-                <com.google.android.material.progressindicator.CircularProgressIndicator
-                    android:layout_width="56dp"
-                    android:layout_height="56dp"
-                    android:indeterminate="true"
-                    app:indicatorColor="?attr/colorPrimary"
-                    app:trackColor="?attr/colorSurfaceVariant"
-                    app:indicatorSize="56dp"
-                    app:trackThickness="4dp" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Loading conversations..."
-                    android:textAppearance="@style/TextAppearance.Material3.BodyLarge"
-                    android:textColor="?attr/colorOnSurface"
-                    android:layout_marginTop="20dp" />
-
-            </LinearLayout>
-
-        </com.google.android.material.card.MaterialCardView>
+        </LinearLayout>
 
     </FrameLayout>
 

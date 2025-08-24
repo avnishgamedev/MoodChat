@@ -8,12 +8,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
-
-import com.google.android.material.card.MaterialCardView;
 
 import java.text.SimpleDateFormat;
 import java.util.List;
@@ -27,7 +26,7 @@ public class ConversationAdapter extends RecyclerView.Adapter<ConversationAdapte
         TextView tvLastMessageTime;
         ImageView ivMessageStatus;
         View onlineIndicator;
-        MaterialCardView mcvLoading;
+        LinearLayout llLoading;
         public ViewHolder(View itemView) {
             super(itemView);
 
@@ -37,7 +36,7 @@ public class ConversationAdapter extends RecyclerView.Adapter<ConversationAdapte
             tvLastMessageTime = itemView.findViewById(R.id.tvLastMessageTime);
             ivMessageStatus = itemView.findViewById(R.id.ivMessageStatus);
             onlineIndicator = itemView.findViewById(R.id.onlineIndicator);
-            mcvLoading = itemView.findViewById(R.id.rlLoading);
+            llLoading = itemView.findViewById(R.id.llLoading);
         }
     }
 
@@ -60,7 +59,7 @@ public class ConversationAdapter extends RecyclerView.Adapter<ConversationAdapte
         Conversation conversation = conversations.get(position);
         holder.itemView.setOnClickListener(v -> listener.onItemClick(null, v, position, 0));
 
-        holder.mcvLoading.setVisibility(View.VISIBLE);
+        holder.llLoading.setVisibility(View.VISIBLE);
         holder.onlineIndicator.setVisibility(View.GONE);
         ConversationHelpers.getUserByUsername(ConversationHelpers.getOtherUsername(conversation.getId(), UserManager.getInstance().getUser().getUsername()))
                 .addOnSuccessListener(user -> {
@@ -77,7 +76,7 @@ public class ConversationAdapter extends RecyclerView.Adapter<ConversationAdapte
                     holder.tvName.setText("Unknown");
                 })
                 .addOnCompleteListener(task -> {
-                    holder.mcvLoading.setVisibility(View.GONE);
+                    holder.llLoading.setVisibility(View.GONE);
                 });
     }
 

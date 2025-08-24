@@ -93,7 +93,7 @@ public class ProfileActivity extends AppCompatActivity {
         btnUpdate = findViewById(R.id.btnUpdate);
         btnChangePassword = findViewById(R.id.btnChangePassword);
         tvRegisteredOn = findViewById(R.id.tvRegisteredOn);
-        rlLoading = findViewById(R.id.rlLoading);
+        rlLoading = findViewById(R.id.llLoading);
 
         ivProfilePic.setOnClickListener(v -> showImagePicker());
 

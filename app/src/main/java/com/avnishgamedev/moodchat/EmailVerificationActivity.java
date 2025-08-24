@@ -46,7 +46,7 @@ public class EmailVerificationActivity extends AppCompatActivity {
         tvEmail = findViewById(R.id.tvEmail);
         btnVerified = findViewById(R.id.btnVerified);
         btnResendEmail = findViewById(R.id.btnResendEmail);
-        rlLoading = findViewById(R.id.rlLoading);
+        rlLoading = findViewById(R.id.llLoading);
 
         if (getIntent().hasExtra("email")) {
             tvEmail.setText(getIntent().getStringExtra("email"));

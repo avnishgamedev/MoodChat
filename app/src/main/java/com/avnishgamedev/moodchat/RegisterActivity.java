@@ -58,7 +58,7 @@ public class RegisterActivity extends AppCompatActivity {
         etConfirmPassword = findViewById(R.id.etConfirmPassword);
         btnRegisterWithEmail = findViewById(R.id.btnRegisterWithEmail);
         btnLogin = findViewById(R.id.btnLogin);
-        rlLoading = findViewById(R.id.rlLoading);
+        rlLoading = findViewById(R.id.llLoading);
 
         btnRegisterWithEmail.setOnClickListener(v -> registerWithEmail());
         btnLogin.setOnClickListener(v -> { startActivity(new Intent(RegisterActivity.this, LoginActivity.class)); finish(); });

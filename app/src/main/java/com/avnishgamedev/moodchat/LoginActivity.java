@@ -28,7 +28,6 @@ import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
 
 import java.util.concurrent.Executors;
@@ -64,7 +63,7 @@ public class LoginActivity extends AppCompatActivity {
         btnSignInWithEmail = findViewById(R.id.btnSignInWithEmail);
         btnRegister = findViewById(R.id.btnRegister);
         btnSIWG = findViewById(R.id.btnSIWG);
-        rlLoading = findViewById(R.id.rlLoading);
+        rlLoading = findViewById(R.id.llLoading);
 
         btnSignInWithEmail.setOnClickListener(v -> signInWithEmail());
         btnRegister.setOnClickListener(v -> startActivity(new Intent(LoginActivity.this, RegisterActivity.class)));
