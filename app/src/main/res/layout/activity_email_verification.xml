@@ -1,85 +1,131 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="@drawable/gradient_background">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:paddingHorizontal="24dp"
+        android:paddingVertical="32dp">
 
-        <ImageView
-            android:layout_width="128dp"
-            android:layout_height="128dp"
-            android:src="@mipmap/ic_launcher"
+        <!-- App Logo with gradient shadow -->
+        <FrameLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:layout_marginTop="40dp" />
+            android:layout_marginTop="32dp">
+            <ImageView
+                android:layout_width="132dp"
+                android:layout_height="132dp"
+                android:src="@mipmap/ic_launcher"
+                android:layout_marginTop="4dp"
+                android:layout_marginStart="4dp"
+                android:alpha="0.3" />
+            <ImageView
+                android:layout_width="128dp"
+                android:layout_height="128dp"
+                android:src="@mipmap/ic_launcher" />
+        </FrameLayout>
 
+        <!-- App Name -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:fontFamily="sans-serif"
-            android:text="Mood Chat"
-            android:textColor="#8080FF"
+            android:layout_marginTop="16dp"
+            android:fontFamily="sans-serif-medium"
+            android:text="MoodChat"
+            android:textColor="#FFFFFF"
             android:textSize="40dp"
+            android:background="@drawable/gradient_text_background"
+            android:paddingHorizontal="16dp"
+            android:paddingVertical="8dp"
+            android:elevation="4dp"
             android:textStyle="bold" />
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="An verification email has been sent to:"
-            android:layout_marginLeft="20dp"
-            android:layout_marginTop="20dp"
-            android:fontFamily="@font/roboto_medium" />
-
-        <TextView
-            android:id="@+id/tvEmail"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="test@example.com"
-            android:layout_marginLeft="20dp"
-            android:textStyle="bold"
-            android:textSize="28dp" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Please click on the link in the email to verify your account."
-            android:layout_marginLeft="20dp" />
-
-        <Button
-            android:id="@+id/btnVerified"
-            style="@style/PrimaryButton"
+        <!-- Card Container with message -->
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginHorizontal="20dp"
-            android:layout_marginTop="20dp"
-            android:text="Verified" />
+            android:background="@drawable/form_card_background"
+            android:orientation="vertical"
+            android:elevation="8dp"
+            android:layout_marginTop="32dp"
+            android:padding="24dp">
 
-        <Button
-            android:id="@+id/btnResendEmail"
-            style="@style/Widget.Material3.Button.TextButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:text="Email not received? Resend" />
+            <!-- Verification message -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="A verification email has been sent to:"
+                android:fontFamily="sans-serif"
+                android:textColor="#CCFFFFFF"
+                android:textSize="18sp"
+                android:layout_gravity="center" />
 
+            <TextView
+                android:id="@+id/tvEmail"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="test@example.com"
+                android:textStyle="bold"
+                android:textSize="26dp"
+                android:textColor="#8080FF"
+                android:layout_marginTop="10dp"
+                android:layout_gravity="center" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Please click on the link in the email to verify your account."
+                android:textColor="#CCFFFFFF"
+                android:textSize="16sp"
+                android:layout_marginTop="20dp"
+                android:layout_gravity="center" />
+
+            <Button
+                android:id="@+id/btnVerified"
+                style="@style/PrimaryButton"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginTop="24dp"
+                android:background="@drawable/gradient_button_background"
+                android:text="Verified"
+                android:textColor="#FFFFFF"
+                android:elevation="4dp"
+                android:textStyle="bold" />
+
+            <Button
+                android:id="@+id/btnResendEmail"
+                style="@style/Widget.Material3.Button.TextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginTop="16dp"
+                android:text="Email not received? Resend"
+                android:textColor="#CCFFFFFF"
+                android:background="@drawable/transparent_button_ripple" />
+
+        </LinearLayout>
     </LinearLayout>
 
     <RelativeLayout
         android:id="@+id/rlLoading"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="#50000000"
+        android:background="@drawable/loading_overlay_background"
         android:visibility="gone">
 
         <com.google.android.material.progressindicator.CircularProgressIndicator
             android:layout_width="128dp"
             android:layout_height="128dp"
             android:layout_centerInParent="true"
-            android:indeterminate="true" />
+            android:indeterminate="true"
+            app:indicatorColor="#8080FF"
+            app:trackColor="#338080FF" />
 
     </RelativeLayout>
-
 </FrameLayout>
