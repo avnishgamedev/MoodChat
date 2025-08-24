@@ -1,10 +1,10 @@
 package com.avnishgamedev.moodchat;
 
-import android.content.res.ColorStateList;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.util.Base64;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,6 +12,8 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.google.android.material.card.MaterialCardView;
 
 import java.text.SimpleDateFormat;
 import java.util.List;
@@ -24,12 +26,18 @@ public class MessagesAdapter extends RecyclerView.Adapter<MessagesAdapter.ViewHo
         ImageView ivProfile;
         TextView tvMessage;
         TextView tvTimestamp;
+        TextView tvStatus;
+
         public ViewHolder(View itemView) {
             super(itemView);
 
             ivProfile = itemView.findViewById(R.id.ivProfile);
             tvMessage = itemView.findViewById(R.id.tvMessage);
             tvTimestamp = itemView.findViewById(R.id.tvTimestamp);
+            tvStatus = itemView.findViewById(R.id.tvStatus); // May be null for received messages
+
+            Log.d("ViewHolder", "Created ViewHolder - tvMessage: " + (tvMessage != null) +
+                    ", tvTimestamp: " + (tvTimestamp != null));
         }
     }
 
@@ -65,33 +73,58 @@ public class MessagesAdapter extends RecyclerView.Adapter<MessagesAdapter.ViewHo
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
         Message message = messages.get(position);
+        Log.d("MessagesAdapter", "Binding position " + position + ": " + message.getMessage());
+
+        // Set message text and timestamp
         holder.tvMessage.setText(message.getMessage().trim());
         holder.tvTimestamp.setText(new SimpleDateFormat("hh:mm a", Locale.getDefault()).format(message.getSentAt().toDate()));
 
-        if (position == messages.size() - 1 && message.getSenderUsername().equals(UserManager.getInstance().getUser().getUsername())) {
-            if (lastIndex != -1 && holder.getAdapterPosition() != lastIndex) {
-                lastIndex = holder.getAdapterPosition();
-                holder.itemView.post(() -> notifyItemChanged(lastIndex));
-            }
+        // Handle last message status
+        boolean isSentMessage = message.getSenderUsername().equals(UserManager.getInstance().getUser().getUsername());
+        if (holder.getAdapterPosition() == messages.size() - 1 && isSentMessage) {
             lastIndex = holder.getAdapterPosition();
         }
 
-        if (message.getSenderUsername().equals(UserManager.getInstance().getUser().getUsername())) {
-            holder.ivProfile.setImageBitmap(base64ToBitmap(thisUser.getProfilePicture()));
-            TextView tvStatus = holder.itemView.findViewById(R.id.tvStatus);
-            if (holder.getAdapterPosition() == lastIndex) {
-                tvStatus.setVisibility(View.VISIBLE);
-                tvStatus.setText(message.getStatus());
-            } else {
-                tvStatus.setVisibility(View.GONE);
-            }
+        // Set profile image safely
+        Bitmap profileBitmap = null;
+        if (isSentMessage) {
+            profileBitmap = base64ToBitmap(thisUser.getProfilePicture());
         } else {
-            holder.ivProfile.setImageBitmap(base64ToBitmap(otherUser.getProfilePicture()));
+            profileBitmap = base64ToBitmap(otherUser.getProfilePicture());
+        }
+        if (profileBitmap != null) {
+            holder.ivProfile.setImageBitmap(profileBitmap);
         }
 
-        if (!sentBubbleColour.equals("@null") && !receivedBubbleColour.equals("@null")) {
-            holder.tvMessage.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor(holder.getItemViewType() == VIEW_TYPE_SENT ? sentBubbleColour : receivedBubbleColour)));
-            holder.tvMessage.setTextColor(Color.parseColor(holder.getItemViewType() == VIEW_TYPE_SENT ? senTextColour : receivedTextColour));
+        // Set bubble colors on the MaterialCardView instead of TextView
+        MaterialCardView cardView = holder.itemView.findViewById(R.id.mcvMessage);
+        if (cardView != null) {
+            if (!sentBubbleColour.equals("@null") && !receivedBubbleColour.equals("@null")) {
+                String bubbleColor = isSentMessage ? sentBubbleColour : receivedBubbleColour;
+                String textColor = isSentMessage ? senTextColour : receivedTextColour;
+
+                cardView.setCardBackgroundColor(Color.parseColor(bubbleColor));
+                holder.tvMessage.setTextColor(Color.parseColor(textColor));
+            } else {
+                // Set default colors
+                if (isSentMessage) {
+                    cardView.setCardBackgroundColor(Color.parseColor("#8080FF"));
+                    holder.tvMessage.setTextColor(Color.WHITE);
+                } else {
+                    cardView.setCardBackgroundColor(Color.parseColor("#2A2A40"));
+                    holder.tvMessage.setTextColor(Color.WHITE);
+                }
+            }
+        }
+
+        // Handle status text for sent messages only
+        if (holder.tvStatus != null && isSentMessage) {
+            if (holder.getAdapterPosition() == lastIndex) {
+                holder.tvStatus.setVisibility(View.VISIBLE);
+                holder.tvStatus.setText(message.getStatus());
+            } else {
+                holder.tvStatus.setVisibility(View.GONE);
+            }
         }
     }
 
@@ -110,6 +143,7 @@ public class MessagesAdapter extends RecyclerView.Adapter<MessagesAdapter.ViewHo
     }
 
     public void setBubbleColours(String sentBubbleColour, String receivedBubbleColour, String senTextColour, String receivedTextColour) {
+        Log.d("MessagesAdapter", "setBubbleColours: " + sentBubbleColour + " " + receivedBubbleColour + " " + senTextColour + " " + receivedTextColour);
         this.sentBubbleColour = sentBubbleColour;
         this.receivedBubbleColour = receivedBubbleColour;
         this.senTextColour = senTextColour;

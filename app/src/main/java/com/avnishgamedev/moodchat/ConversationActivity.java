@@ -15,6 +15,7 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -25,6 +26,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.core.graphics.ColorUtils;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -62,6 +65,7 @@ public class ConversationActivity extends AppCompatActivity implements CallManag
     EditText etMessage;
     FloatingActionButton flSend;
     CircularProgressIndicator progressIndicator;
+    LinearLayout loadingContainer;
 
     // Meta data
     Conversation conversation;
@@ -155,11 +159,15 @@ public class ConversationActivity extends AppCompatActivity implements CallManag
         etMessage = findViewById(R.id.etMessage);
         flSend = findViewById(R.id.flSend);
         progressIndicator = findViewById(R.id.progressIndicator);
+        loadingContainer = findViewById(R.id.loadingContainer);
+
+        rvMessages.setLayoutManager(new LinearLayoutManager(this));
 
         ivBack.setOnClickListener(v -> finish());
         flSend.setOnClickListener(v -> sendMessage());
         btnVideoCall.setOnClickListener(v -> initiateVideoCall());
     }
+
 
     private void setupVideoCall() {
         callManager = CallManager.getInstance(this);
@@ -458,25 +466,31 @@ public class ConversationActivity extends AppCompatActivity implements CallManag
         setLoading(true);
         thisUser = UserManager.getInstance().getUser();
         ConversationHelpers.bindUserByUsername(ConversationHelpers.getOtherUsername(conversation.getId(), thisUser.getUsername()), (snap, e) -> {
-           if (e != null) {
-               Log.e(TAG, "Failed to load otherUser!", e);
-               Toast.makeText(this, "Failed to load otherUser!", Toast.LENGTH_SHORT).show();
-           }
-           if (snap == null) {
-               Log.w(TAG, "otherUser snapshot is null");
-               return;
-           }
-           setLoading(false);
-           otherUser = snap.toObject(User.class);
+            if (e != null) {
+                Log.e(TAG, "Failed to load otherUser!", e);
+                Toast.makeText(this, "Failed to load otherUser!", Toast.LENGTH_SHORT).show();
+                setLoading(false);
+                return;
+            }
+            if (snap == null) {
+                Log.w(TAG, "otherUser snapshot is null");
+                setLoading(false);
+                return;
+            }
 
-           if (adapter == null) {
-               initialiseAdapter();
-           }
+            otherUser = snap.toObject(User.class);
 
+            // UI updates
             tvChatName.setText(otherUser.getName());
             tvChatUsername.setText(otherUser.getUsername());
             ivProfilePic.setImageBitmap(base64ToBitmap(otherUser.getProfilePicture()));
             ivStatus.setImageResource(otherUser.isOnline() ? R.drawable.circle_online : R.drawable.circle_offline);
+
+            if (adapter == null) {
+                initialiseAdapter(); // This will call setLoading(false) when done
+            } else {
+                setLoading(false);
+            }
         });
 
         setThemeFromData(conversation.getThemeData());
@@ -485,14 +499,16 @@ public class ConversationActivity extends AppCompatActivity implements CallManag
     private void initialiseAdapter() {
         adapter = new MessagesAdapter(messages, thisUser, otherUser);
         rvMessages.setAdapter(adapter);
+        rvMessages.setLayoutManager(new LinearLayoutManager(this));
 
         if (conversation.getThemeData() != null) {
             setThemeFromData(conversation.getThemeData());
         }
 
-        // First we load last 10 messages, then we start realtime listener
         ConversationHelpers.getMessagesQuery(conversation.getId()).limit(10).get()
                 .addOnSuccessListener(snap -> {
+                    Log.d(TAG, "Initial messages loaded: " + snap.size());
+
                     for (DocumentSnapshot d : snap.getDocuments()) {
                         Message m = d.toObject(Message.class);
                         if (m != null) {
@@ -506,22 +522,26 @@ public class ConversationActivity extends AppCompatActivity implements CallManag
                         }
                     }
 
-                    rvMessages.scrollToPosition(messages.size() - 1);
+                    // Critical: Stop loading here
+                    setLoading(false);
+                    adapter.notifyDataSetChanged();
+
+                    if (messages.size() > 0) {
+                        rvMessages.scrollToPosition(messages.size() - 1);
+                    }
+
                     startMessagesListener();
                 })
                 .addOnFailureListener(e -> {
                     Log.e(TAG, "Failed to load initial messages", e);
                     Toast.makeText(this, "Failed to load initial messages", Toast.LENGTH_SHORT).show();
+                    setLoading(false); // Critical: Stop loading on failure too
                 });
     }
 
     private void startMessagesListener() {
-        setLoading(true);
-
         Query query = ConversationHelpers.getMessagesQuery(conversation.getId());
         messagesRegistration = query.addSnapshotListener((snap, e) -> {
-            setLoading(false);
-
             if (e != null) {
                 Log.e(TAG, "Messages listen failed", e);
                 return;
@@ -534,19 +554,26 @@ public class ConversationActivity extends AppCompatActivity implements CallManag
             for (DocumentChange dc : snap.getDocumentChanges()) {
                 if (dc.getType() == DocumentChange.Type.ADDED) {
                     Message newMessage = dc.getDocument().toObject(Message.class);
-                    messages.add(newMessage);
+                    newMessage.setId(dc.getDocument().getId());
 
-                    Log.d(TAG, "New message");
+                    // Prevent duplicates from initial load
+                    boolean exists = messages.stream().anyMatch(m -> m.getId().equals(newMessage.getId()));
+                    if (!exists) {
+                        messages.add(newMessage);
+                        Log.d(TAG, "New message from listener: " + newMessage.getMessage());
 
-                    adapter.notifyItemInserted(messages.size() - 1);
-                    rvMessages.scrollToPosition(messages.size() - 1);
+                        adapter.notifyItemInserted(messages.size() - 1);
+                        rvMessages.scrollToPosition(messages.size() - 1);
 
-                    if (newMessage.getSenderUsername().equals(ConversationHelpers.getOtherUsername(conversation.getId(), UserManager.getInstance().getUser().getUsername()))) {
-                        ConversationHelpers.updateMessageStatus(conversation.getId(), newMessage.getId(), "read")
-                                .addOnFailureListener(e1 -> Log.e(TAG, "Failed to update message status:", e1));
+                        if (newMessage.getSenderUsername().equals(ConversationHelpers.getOtherUsername(conversation.getId(), UserManager.getInstance().getUser().getUsername()))) {
+                            ConversationHelpers.updateMessageStatus(conversation.getId(), newMessage.getId(), "read")
+                                    .addOnFailureListener(e1 -> Log.e(TAG, "Failed to update message status:", e1));
+                        }
                     }
                 } else if (dc.getType() == DocumentChange.Type.MODIFIED) {
                     Message modifiedMessage = dc.getDocument().toObject(Message.class);
+                    modifiedMessage.setId(dc.getDocument().getId());
+
                     int index = IntStream.range(0, messages.size())
                             .filter(i -> messages.get(i).getId().equals(modifiedMessage.getId()))
                             .findFirst()
@@ -554,13 +581,12 @@ public class ConversationActivity extends AppCompatActivity implements CallManag
                     if (index != -1) {
                         messages.set(index, modifiedMessage);
                         adapter.notifyItemChanged(index);
-                    } else {
-                        Log.w(TAG, "Modified message not found in messages list");
                     }
                 }
             }
         });
     }
+
     private void stopMessagesListener() {
         if (messagesRegistration != null) {
             messagesRegistration.remove();
@@ -571,28 +597,44 @@ public class ConversationActivity extends AppCompatActivity implements CallManag
     private void setLoading(boolean status) {
         if (status) {
             rvMessages.setVisibility(View.GONE);
-            progressIndicator.setVisibility(View.VISIBLE);
+            loadingContainer.setVisibility(View.VISIBLE);
         } else {
             rvMessages.setVisibility(View.VISIBLE);
-            progressIndicator.setVisibility(View.GONE);
+            loadingContainer.setVisibility(View.GONE);
         }
     }
+
 
     private void setThemeFromData(ConversationThemeData data) {
         if (data != null) {
             viewBackground.setBackgroundColor(Color.parseColor(data.getBackground()));
             constraintLayout.setBackgroundColor(Color.parseColor(data.getSurrounding()));
 
-            // For TextInputEditText instead of EditText
+            // For TextInputEditText
             etMessage.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor(data.getMessageBackground())));
             etMessage.setTextColor(Color.parseColor(data.getMessageTextColour()));
 
-            // For FloatingActionButton instead of FrameLayout
+            // Set hint color based on message background brightness
+            int hintColor = getContrastingHintColor(data.getMessageBackground());
+            etMessage.setHintTextColor(hintColor);
+
+            // For FloatingActionButton
             flSend.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor(data.getSendBackground())));
             flSend.setImageTintList(ColorStateList.valueOf(Color.parseColor(data.getSendIconTint())));
 
             if (adapter != null)
                 adapter.setBubbleColours(data.getSentBubbleColour(), data.getReceivedBubbleColour(), data.getSentTextColour(), data.getReceivedTextColour());
+        }
+    }
+
+    private int getContrastingHintColor(String backgroundColor) {
+        int bgColor = Color.parseColor(backgroundColor);
+        double luminance = ColorUtils.calculateLuminance(bgColor);
+
+        if (luminance > 0.5) {
+            return Color.parseColor("#666666"); // Dark hint for light backgrounds
+        } else {
+            return Color.parseColor("#CCCCCC"); // Light hint for dark backgrounds
         }
     }
 
