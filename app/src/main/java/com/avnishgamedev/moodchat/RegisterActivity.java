@@ -2,8 +2,11 @@ package com.avnishgamedev.moodchat;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.util.Patterns;
+import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.RelativeLayout;
@@ -63,6 +66,21 @@ public class RegisterActivity extends AppCompatActivity {
         etUsername.setOnFocusChangeListener((v, hasFocus) -> {
             if (!hasFocus) {
                 validateUsername();
+            }
+        });
+
+        etPassword.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void afterTextChanged(Editable editable) {
+                updatePasswordStrengthUI(editable.toString());
+            }
+
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
             }
         });
     }
@@ -188,5 +206,60 @@ public class RegisterActivity extends AppCompatActivity {
             btnLogin.setEnabled(!status);
             rlLoading.setVisibility(status ? RelativeLayout.VISIBLE : RelativeLayout.GONE);
         });
+    }
+
+    // ---- Password Strength ----
+    public enum PasswordStrength {
+        WEAK,
+        MEDIUM,
+        STRONG
+    }
+
+    public PasswordStrength calculatePasswordStrength(String password) {
+        boolean hasLower = false, hasUpper = false, hasDigit = false, hasSpecial = false;
+        int length = password.length();
+        String specialChars = "!@#$%^&*()-_+=<>?/{}[]|:;.,~`'\"\\";
+        for (int i = 0; i < length; i++) {
+            char c = password.charAt(i);
+            if (Character.isLowerCase(c)) hasLower = true;
+            else if (Character.isUpperCase(c)) hasUpper = true;
+            else if (Character.isDigit(c)) hasDigit = true;
+            else if (specialChars.indexOf(c) >= 0) hasSpecial = true;
+        }
+        int score = 0;
+        if (length >= 8) score++;
+        if (hasLower && hasUpper) score++;
+        if (hasDigit) score++;
+        if (hasSpecial) score++;
+
+        if (score <= 1) return PasswordStrength.WEAK;
+        else if (score == 2 || score == 3) return PasswordStrength.MEDIUM;
+        else return PasswordStrength.STRONG;
+    }
+    private void updatePasswordStrengthUI(String password) {
+        PasswordStrength strength = calculatePasswordStrength(password);
+
+        View weakIndicator = findViewById(R.id.weakStrengthIndicator);
+        View mediumIndicator = findViewById(R.id.mediumStrengthIndicator);
+        View strongIndicator = findViewById(R.id.strongStrengthIndicator);
+
+        weakIndicator.setAlpha(0.3f);
+        mediumIndicator.setAlpha(0.3f);
+        strongIndicator.setAlpha(0.3f);
+
+        switch (strength) {
+            case WEAK:
+                weakIndicator.setAlpha(1.0f);
+                break;
+            case MEDIUM:
+                weakIndicator.setAlpha(1.0f);
+                mediumIndicator.setAlpha(1.0f);
+                break;
+            case STRONG:
+                weakIndicator.setAlpha(1.0f);
+                mediumIndicator.setAlpha(1.0f);
+                strongIndicator.setAlpha(1.0f);
+                break;
+        }
     }
 }
