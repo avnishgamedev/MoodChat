@@ -13,4 +13,10 @@
         app:showAsAction="ifRoom"
         android:icon="@drawable/ic_exit"
         android:iconTint="@color/white" />
+    <item
+        android:id="@+id/action_about"
+        android:title="About"
+        app:showAsAction="ifRoom"
+        android:icon="@drawable/ic_info"
+        android:iconTint="@color/white" />
 </menu>

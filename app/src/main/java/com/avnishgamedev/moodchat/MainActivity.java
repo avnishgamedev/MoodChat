@@ -1,5 +1,6 @@
 package com.avnishgamedev.moodchat;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Rect;
@@ -117,8 +118,19 @@ public class MainActivity extends AppCompatActivity {
         } else if (item.getItemId() == R.id.action_logout) {
             signOut();
             return true;
+        } else if (item.getItemId() == R.id.action_about) {
+            showAppInfoDialog(this);
+            return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    public void showAppInfoDialog(Context context) {
+        new MaterialAlertDialogBuilder(context)
+                .setTitle("App Info")
+                .setMessage("MoodChat developed by Avnish Kirnalli as Internship project")
+                .setPositiveButton("OK", null)
+                .show();
     }
 
     @Override
