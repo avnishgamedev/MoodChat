@@ -73,6 +73,7 @@ public class ConversationAdapter extends RecyclerView.Adapter<ConversationAdapte
                      }
                 })
                 .addOnFailureListener(e -> {
+                    e.printStackTrace();
                     holder.tvName.setText("Unknown");
                 })
                 .addOnCompleteListener(task -> {

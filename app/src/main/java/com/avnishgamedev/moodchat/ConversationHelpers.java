@@ -17,10 +17,8 @@ import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.SetOptions;
 import com.google.firebase.firestore.WriteBatch;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 public class ConversationHelpers {
@@ -136,7 +134,8 @@ public class ConversationHelpers {
     }
 
     public static String getOtherUsername(String conversationId, String currentUsername) {
-        return conversationId.replace(currentUsername, "").replace("_", "");
+        String[] usernames = conversationId.split("_");
+        return usernames[0].equals(currentUsername) ? usernames[1] : usernames[0];
     }
 
     public static Query getConversationsQuery(String username) {
